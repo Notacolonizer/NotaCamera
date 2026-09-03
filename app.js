@@ -1,8 +1,5 @@
-const video =
-    document.getElementById("cameraPreview");
-
-const canvas =
-    document.getElementById("photoCanvas");
+const video = document.getElementById("cameraPreview");
+const canvas = document.getElementById("photoCanvas");
 
 const shutterButton =
     document.getElementById("shutterButton");
@@ -38,9 +35,9 @@ const styleOptions =
     document.querySelectorAll(".style-option");
 
 
-let currentCamera = "environment";
-
 let currentStream = null;
+
+let currentCamera = "environment";
 
 let currentZoom = 1;
 
@@ -57,9 +54,227 @@ let pinchStartDistance = null;
 let pinchStartZoom = 1;
 
 
-/* =========================
-   CAMERA
-========================= */
+/* =================================
+   CAMERA STYLES
+================================= */
+
+const styles = {
+
+    original: {
+
+        filter: "none",
+
+        grain: 0,
+
+        vignette: 0,
+
+        dust: 0,
+
+        scratches: 0,
+
+        lightLeak: 0,
+
+        halation: 0,
+
+        glow: 0,
+
+        date: false
+
+    },
+
+
+    vintage: {
+
+        filter: `
+            sepia(0.45)
+            saturate(0.85)
+            contrast(0.94)
+        `,
+
+        grain: 18,
+
+        vignette: 0.35,
+
+        dust: 0.08,
+
+        scratches: 0.02,
+
+        lightLeak: 0.12,
+
+        halation: 0.08,
+
+        glow: 0,
+
+        date: false
+
+    },
+
+
+    film: {
+
+        filter: `
+            contrast(1.12)
+            saturate(0.82)
+        `,
+
+        grain: 28,
+
+        vignette: 0.28,
+
+        dust: 0.10,
+
+        scratches: 0.04,
+
+        lightLeak: 0.05,
+
+        halation: 0.12,
+
+        glow: 0,
+
+        date: false
+
+    },
+
+
+    disposable: {
+
+        filter: `
+            contrast(1.18)
+            saturate(1.08)
+            brightness(1.05)
+        `,
+
+        grain: 38,
+
+        vignette: 0.48,
+
+        dust: 0.16,
+
+        scratches: 0.08,
+
+        lightLeak: 0.18,
+
+        halation: 0.16,
+
+        glow: 0.04,
+
+        date: true
+
+    },
+
+
+    digital: {
+
+        filter: `
+            contrast(1.15)
+            saturate(0.9)
+            brightness(1.02)
+        `,
+
+        grain: 12,
+
+        vignette: 0.12,
+
+        dust: 0,
+
+        scratches: 0,
+
+        lightLeak: 0,
+
+        halation: 0,
+
+        glow: 0,
+
+        date: true
+
+    },
+
+
+    dreamy: {
+
+        filter: `
+            brightness(1.08)
+            saturate(0.88)
+        `,
+
+        grain: 5,
+
+        vignette: 0.12,
+
+        dust: 0,
+
+        scratches: 0,
+
+        lightLeak: 0.32,
+
+        halation: 0.35,
+
+        glow: 0.35,
+
+        date: false
+
+    },
+
+
+    night: {
+
+        filter: `
+            contrast(1.18)
+            brightness(0.88)
+            saturate(0.85)
+        `,
+
+        grain: 24,
+
+        vignette: 0.38,
+
+        dust: 0.04,
+
+        scratches: 0,
+
+        lightLeak: 0,
+
+        halation: 0.18,
+
+        glow: 0.08,
+
+        date: false
+
+    },
+
+
+    noir: {
+
+        filter: `
+            grayscale(1)
+            contrast(1.45)
+            brightness(0.88)
+        `,
+
+        grain: 25,
+
+        vignette: 0.45,
+
+        dust: 0.08,
+
+        scratches: 0.03,
+
+        lightLeak: 0,
+
+        halation: 0,
+
+        glow: 0,
+
+        date: false
+
+    }
+
+};
+
+
+/* =================================
+   CAMERA START
+================================= */
 
 async function startCamera() {
 
@@ -74,7 +289,7 @@ async function startCamera() {
         }
 
 
-        const stream =
+        currentStream =
             await navigator.mediaDevices
             .getUserMedia({
 
@@ -90,13 +305,16 @@ async function startCamera() {
             });
 
 
-        currentStream = stream;
+        video.srcObject =
+            currentStream;
 
-        video.srcObject = stream;
 
         await video.play();
 
+
         setupZoom();
+
+        updateLiveStyle();
 
     }
 
@@ -105,8 +323,7 @@ async function startCamera() {
         console.error(error);
 
         alert(
-            "Couldn't access the camera. " +
-            "Please allow camera access."
+            "Couldn't access the camera."
         );
 
     }
@@ -114,39 +331,28 @@ async function startCamera() {
 }
 
 
-/* =========================
+/* =================================
    CAMERA SWITCH
-========================= */
+================================= */
 
 async function switchCamera() {
 
-    if (
-        currentCamera ===
-        "environment"
-    ) {
+    currentCamera =
+        currentCamera === "environment"
+            ? "user"
+            : "environment";
 
-        currentCamera = "user";
-
-    }
-
-    else {
-
-        currentCamera =
-            "environment";
-
-    }
 
     await startCamera();
 
 }
 
 
-/* Both camera buttons now work */
-
 cameraButton.addEventListener(
     "click",
     switchCamera
 );
+
 
 cameraModeButton.addEventListener(
     "click",
@@ -154,9 +360,9 @@ cameraModeButton.addEventListener(
 );
 
 
-/* =========================
+/* =================================
    ZOOM
-========================= */
+================================= */
 
 function setupZoom() {
 
@@ -165,6 +371,7 @@ function setupZoom() {
         ?.getVideoTracks()[0];
 
     if (!track) return;
+
 
     const capabilities =
         track.getCapabilities();
@@ -201,10 +408,7 @@ async function applyZoom(value) {
     currentZoom =
         Math.max(
             zoomMin,
-            Math.min(
-                value,
-                zoomMax
-            )
+            Math.min(value, zoomMax)
         );
 
 
@@ -224,12 +428,12 @@ async function applyZoom(value) {
 
                 advanced: [
                     {
-                        zoom:
-                            currentZoom
+                        zoom: currentZoom
                     }
                 ]
 
             });
+
 
             video.style.transform =
                 "scale(1)";
@@ -251,7 +455,8 @@ async function applyZoom(value) {
     }
 
 
-    updateZoomButton();
+    zoomButton.textContent =
+        `${currentZoom.toFixed(1)}×`;
 
 }
 
@@ -264,70 +469,45 @@ function applyDigitalZoom() {
 }
 
 
-function updateZoomButton() {
-
-    zoomButton.textContent =
-        `${currentZoom.toFixed(1)}×`;
-
-}
-
-
 zoomButton.addEventListener(
     "click",
     () => {
 
-        let nextZoom;
-
-
-        if (currentZoom < 1.5) {
-
-            nextZoom = 2;
-
-        }
-
-        else {
-
-            nextZoom = 1;
-
-        }
-
-
-        applyZoom(nextZoom);
+        applyZoom(
+            currentZoom >= 2
+                ? 1
+                : 2
+        );
 
     }
 );
 
 
-/* =========================
+/* =================================
    PINCH ZOOM
-========================= */
+================================= */
 
 video.addEventListener(
     "touchstart",
     event => {
 
-        if (
-            event.touches.length === 2
-        ) {
-
-            const a =
-                event.touches[0];
-
-            const b =
-                event.touches[1];
+        if (event.touches.length !== 2)
+            return;
 
 
-            pinchStartDistance =
-                Math.hypot(
-                    b.clientX - a.clientX,
-                    b.clientY - a.clientY
-                );
+        const a = event.touches[0];
+        const b = event.touches[1];
 
 
-            pinchStartZoom =
-                currentZoom;
+        pinchStartDistance =
+            Math.hypot(
+                b.clientX - a.clientX,
+                b.clientY - a.clientY
+            );
 
-        }
+
+        pinchStartZoom =
+            currentZoom;
 
     }
 );
@@ -338,37 +518,34 @@ video.addEventListener(
     event => {
 
         if (
-            event.touches.length === 2 &&
-            pinchStartDistance
-        ) {
-
-            event.preventDefault();
-
-
-            const a =
-                event.touches[0];
-
-            const b =
-                event.touches[1];
+            event.touches.length !== 2 ||
+            !pinchStartDistance
+        )
+            return;
 
 
-            const distance =
-                Math.hypot(
-                    b.clientX - a.clientX,
-                    b.clientY - a.clientY
-                );
+        event.preventDefault();
 
 
-            const scale =
-                distance /
-                pinchStartDistance;
+        const a = event.touches[0];
+        const b = event.touches[1];
 
 
-            applyZoom(
-                pinchStartZoom * scale
+        const distance =
+            Math.hypot(
+                b.clientX - a.clientX,
+                b.clientY - a.clientY
             );
 
-        }
+
+        const scale =
+            distance /
+            pinchStartDistance;
+
+
+        applyZoom(
+            pinchStartZoom * scale
+        );
 
     },
     {
@@ -388,13 +565,13 @@ video.addEventListener(
 );
 
 
-/* =========================
-   FOCUS
-========================= */
+/* =================================
+   TAP TO FOCUS
+================================= */
 
 video.addEventListener(
     "click",
-    async event => {
+    event => {
 
         const rect =
             video.getBoundingClientRect();
@@ -445,9 +622,9 @@ video.addEventListener(
 );
 
 
-/* =========================
-   STYLES PANEL
-========================= */
+/* =================================
+   STYLE PANEL
+================================= */
 
 stylesButton.addEventListener(
     "click",
@@ -473,9 +650,9 @@ closeStyles.addEventListener(
 );
 
 
-/* =========================
-   CHOOSE STYLE
-========================= */
+/* =================================
+   SELECT STYLE
+================================= */
 
 styleOptions.forEach(option => {
 
@@ -483,11 +660,12 @@ styleOptions.forEach(option => {
         "click",
         () => {
 
-            styleOptions
-                .forEach(item =>
-                    item.classList
-                        .remove("active")
-                );
+            styleOptions.forEach(item => {
+
+                item.classList
+                    .remove("active");
+
+            });
 
 
             option.classList
@@ -506,9 +684,9 @@ styleOptions.forEach(option => {
 });
 
 
-/* =========================
+/* =================================
    STRENGTH
-========================= */
+================================= */
 
 strengthSlider.addEventListener(
     "input",
@@ -530,103 +708,59 @@ strengthSlider.addEventListener(
 );
 
 
-/* =========================
-   LIVE FILTER
-========================= */
+/* =================================
+   LIVE PREVIEW
+================================= */
 
 function updateLiveStyle() {
+
+    const style =
+        styles[currentStyle];
+
+
+    if (!style) return;
+
 
     const amount =
         styleStrength / 100;
 
 
-    let filter = "none";
+    if (currentStyle === "original") {
 
+        video.style.filter =
+            "none";
 
-    if (
-        currentStyle ===
-        "vintage"
-    ) {
-
-        filter =
-            `sepia(${0.55 * amount})
-             saturate(${1 - 0.25 * amount})
-             contrast(${1 - 0.08 * amount})`;
-
-    }
-
-
-    else if (
-        currentStyle ===
-        "film"
-    ) {
-
-        filter =
-            `contrast(${1 + 0.25 * amount})
-             saturate(${1 - 0.20 * amount})`;
-
-    }
-
-
-    else if (
-        currentStyle ===
-        "bw"
-    ) {
-
-        filter =
-            `grayscale(${amount})
-             contrast(${1 + 0.2 * amount})`;
-
-    }
-
-
-    else if (
-        currentStyle ===
-        "dreamy"
-    ) {
-
-        filter =
-            `brightness(${1 + 0.15 * amount})
-             saturate(${1 - 0.15 * amount})
-             blur(${0.5 * amount}px)`;
-
-    }
-
-
-    else if (
-        currentStyle ===
-        "noir"
-    ) {
-
-        filter =
-            `grayscale(${amount})
-             contrast(${1 + 0.5 * amount})
-             brightness(${1 - 0.2 * amount})`;
+        return;
 
     }
 
 
     video.style.filter =
-        filter;
+        style.filter;
+
+
+    /*
+       Add live glow for dreamy styles
+    */
+
+    if (style.glow > 0) {
+
+        video.style.filter +=
+            ` blur(${style.glow * amount}px)`;
+
+    }
 
 }
 
 
-/* =========================
+/* =================================
    TAKE PHOTO
-========================= */
+================================= */
 
 function takePhoto() {
 
-    if (!currentStream) {
-
-        alert(
-            "Camera isn't ready yet."
-        );
-
+    if (!currentStream)
         return;
-
-    }
 
 
     const width =
@@ -646,10 +780,6 @@ function takePhoto() {
     const context =
         canvas.getContext("2d");
 
-
-    /*
-       Digital zoom crop
-    */
 
     const zoom =
         Math.max(
@@ -672,33 +802,77 @@ function takePhoto() {
         (height - cropHeight) / 2;
 
 
+    /*
+       Apply style
+    */
+
     context.filter =
         getCanvasFilter();
 
 
     context.drawImage(
+
         video,
+
         cropX,
         cropY,
+
         cropWidth,
         cropHeight,
+
         0,
         0,
+
+        width,
+        height
+
+    );
+
+
+    /*
+       Effects
+    */
+
+    applyFilmGrain(
+        context,
         width,
         height
     );
 
 
-    /*
-       Film grain
-    */
+    applyVignette(
+        context,
+        width,
+        height
+    );
+
+
+    applyDust(
+        context,
+        width,
+        height
+    );
+
+
+    applyScratches(
+        context,
+        width,
+        height
+    );
+
+
+    applyLightLeak(
+        context,
+        width,
+        height
+    );
+
 
     if (
-        currentStyle === "film" ||
-        currentStyle === "vintage"
+        styles[currentStyle].date
     ) {
 
-        addGrain(
+        addDateStamp(
             context,
             width,
             height
@@ -706,6 +880,10 @@ function takePhoto() {
 
     }
 
+
+    /*
+       Save
+    */
 
     canvas.toBlob(
         blob => {
@@ -728,113 +906,68 @@ function takePhoto() {
             link.click();
 
 
-            URL.revokeObjectURL(
-                url
-            );
+            URL.revokeObjectURL(url);
 
         },
 
         "image/jpeg",
 
         0.95
+
     );
 
 }
 
 
-/* =========================
-   PHOTO FILTER
-========================= */
+shutterButton.addEventListener(
+    "click",
+    takePhoto
+);
+
+
+/* =================================
+   FILTER
+================================= */
 
 function getCanvasFilter() {
 
-    const amount =
-        styleStrength / 100;
+    const style =
+        styles[currentStyle];
 
 
-    if (
-        currentStyle ===
-        "vintage"
-    ) {
-
-        return `
-            sepia(${0.55 * amount})
-            saturate(${1 - 0.25 * amount})
-            contrast(${1 - 0.08 * amount})
-        `;
-
-    }
+    if (!style)
+        return "none";
 
 
-    if (
-        currentStyle ===
-        "film"
-    ) {
-
-        return `
-            contrast(${1 + 0.25 * amount})
-            saturate(${1 - 0.20 * amount})
-        `;
-
-    }
-
-
-    if (
-        currentStyle ===
-        "bw"
-    ) {
-
-        return `
-            grayscale(${amount})
-            contrast(${1 + 0.2 * amount})
-        `;
-
-    }
-
-
-    if (
-        currentStyle ===
-        "dreamy"
-    ) {
-
-        return `
-            brightness(${1 + 0.15 * amount})
-            saturate(${1 - 0.15 * amount})
-        `;
-
-    }
-
-
-    if (
-        currentStyle ===
-        "noir"
-    ) {
-
-        return `
-            grayscale(${amount})
-            contrast(${1 + 0.5 * amount})
-            brightness(${1 - 0.2 * amount})
-        `;
-
-    }
-
-
-    return "none";
+    return style.filter || "none";
 
 }
 
 
-/* =========================
+/* =================================
    GRAIN
-========================= */
+================================= */
 
-function addGrain(
+function applyFilmGrain(
     context,
     width,
     height
 ) {
 
-    const imageData =
+    const style =
+        styles[currentStyle];
+
+
+    const amount =
+        style.grain *
+        (styleStrength / 100);
+
+
+    if (amount <= 0)
+        return;
+
+
+    const image =
         context.getImageData(
             0,
             0,
@@ -844,11 +977,7 @@ function addGrain(
 
 
     const data =
-        imageData.data;
-
-
-    const strength =
-        styleStrength * 0.35;
+        image.data;
 
 
     for (
@@ -859,7 +988,7 @@ function addGrain(
 
         const noise =
             (Math.random() - 0.5)
-            * strength;
+            * amount;
 
 
         data[i] =
@@ -895,7 +1024,7 @@ function addGrain(
 
 
     context.putImageData(
-        imageData,
+        image,
         0,
         0
     );
@@ -903,18 +1032,301 @@ function addGrain(
 }
 
 
-/* =========================
-   SHUTTER
-========================= */
+/* =================================
+   VIGNETTE
+================================= */
 
-shutterButton.addEventListener(
-    "click",
-    takePhoto
-);
+function applyVignette(
+    context,
+    width,
+    height
+) {
+
+    const style =
+        styles[currentStyle];
 
 
-/* =========================
+    const amount =
+        style.vignette *
+        (styleStrength / 100);
+
+
+    if (amount <= 0)
+        return;
+
+
+    const gradient =
+        context.createRadialGradient(
+
+            width / 2,
+            height / 2,
+            Math.min(width, height) * 0.25,
+
+            width / 2,
+            height / 2,
+            Math.max(width, height) * 0.75
+
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        `rgba(0,0,0,${amount})`
+    );
+
+
+    context.fillStyle =
+        gradient;
+
+
+    context.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+}
+
+
+/* =================================
+   DUST
+================================= */
+
+function applyDust(
+    context,
+    width,
+    height
+) {
+
+    const style =
+        styles[currentStyle];
+
+
+    const amount =
+        style.dust *
+        (styleStrength / 100);
+
+
+    const count =
+        Math.floor(
+            width * height *
+            amount / 18000
+        );
+
+
+    context.fillStyle =
+        "rgba(255,255,255,0.45)";
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const x =
+            Math.random() * width;
+
+        const y =
+            Math.random() * height;
+
+        const size =
+            Math.random() * 2 + 0.5;
+
+
+        context.beginPath();
+
+        context.arc(
+            x,
+            y,
+            size,
+            0,
+            Math.PI * 2
+        );
+
+        context.fill();
+
+    }
+
+}
+
+
+/* =================================
+   SCRATCHES
+================================= */
+
+function applyScratches(
+    context,
+    width,
+    height
+) {
+
+    const style =
+        styles[currentStyle];
+
+
+    const amount =
+        style.scratches *
+        (styleStrength / 100);
+
+
+    const count =
+        Math.floor(
+            amount * 20
+        );
+
+
+    context.strokeStyle =
+        "rgba(255,255,255,0.18)";
+
+
+    context.lineWidth = 1;
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const x =
+            Math.random() * width;
+
+
+        context.beginPath();
+
+        context.moveTo(
+            x,
+            0
+        );
+
+        context.lineTo(
+            x + Math.random() * 10 - 5,
+            height
+        );
+
+        context.stroke();
+
+    }
+
+}
+
+
+/* =================================
+   LIGHT LEAK
+================================= */
+
+function applyLightLeak(
+    context,
+    width,
+    height
+) {
+
+    const style =
+        styles[currentStyle];
+
+
+    const amount =
+        style.lightLeak *
+        (styleStrength / 100);
+
+
+    if (amount <= 0)
+        return;
+
+
+    const gradient =
+        context.createLinearGradient(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+    gradient.addColorStop(
+        0,
+        `rgba(255,120,40,${amount})`
+    );
+
+
+    gradient.addColorStop(
+        0.35,
+        "rgba(255,80,30,0)"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        "rgba(255,80,30,0)"
+    );
+
+
+    context.fillStyle =
+        gradient;
+
+
+    context.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+}
+
+
+/* =================================
+   DATE STAMP
+================================= */
+
+function addDateStamp(
+    context,
+    width,
+    height
+) {
+
+    const now =
+        new Date();
+
+
+    const date =
+        now.toISOString()
+        .slice(0, 10)
+        .replaceAll("-", "-");
+
+
+    context.font =
+        `${Math.max(14, width * 0.025)}px monospace`;
+
+
+    context.fillStyle =
+        "rgba(255,110,50,0.9)";
+
+
+    context.textAlign =
+        "right";
+
+
+    context.fillText(
+        date,
+        width - 25,
+        height - 25
+    );
+
+}
+
+
+/* =================================
    START
-========================= */
+================================= */
 
 startCamera();
+
