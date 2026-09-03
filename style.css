@@ -2,14 +2,18 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+
     -webkit-tap-highlight-color: transparent;
 }
+
 
 html,
 body {
     width: 100%;
     height: 100%;
+
     overflow: hidden;
+
     background: #000;
 
     font-family:
@@ -19,29 +23,31 @@ body {
         sans-serif;
 }
 
+
 body {
     overscroll-behavior: none;
 }
 
+
 .camera {
     position: fixed;
+
     inset: 0;
 
     width: 100vw;
     height: 100dvh;
 
-    background: #000;
-
     overflow: hidden;
+
+    background: #000;
 }
 
 
-/* =========================
-   CAMERA PREVIEW
-   ========================= */
+/* CAMERA */
 
 #cameraPreview {
     position: absolute;
+
     inset: 0;
 
     width: 100%;
@@ -50,114 +56,130 @@ body {
     object-fit: cover;
 
     background: #111;
+
+    touch-action: none;
+
+    transition:
+        filter 0.25s ease,
+        transform 0.15s ease-out;
 }
 
 
-/* =========================
-   TOP CONTROLS
-   ========================= */
+/* TOP */
 
 .top-controls {
+
     position: absolute;
 
-    top: calc(env(safe-area-inset-top) + 18px);
+    top: calc(
+        env(safe-area-inset-top) + 18px
+    );
 
     left: 0;
 
     width: 100%;
 
     display: flex;
-    align-items: center;
+
     justify-content: space-between;
+
+    align-items: center;
 
     padding: 0 20px;
 
-    z-index: 10;
+    z-index: 20;
 }
 
 
 .glass-button,
 .zoom-indicator {
-    border: 0;
+
+    border: none;
 
     color: white;
 
-    background: rgba(20, 20, 20, 0.45);
+    background:
+        rgba(20, 20, 20, 0.45);
 
     backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
 
-    box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.18);
+    -webkit-backdrop-filter: blur(18px);
 
     cursor: pointer;
 }
 
 
 .glass-button {
+
     width: 46px;
     height: 46px;
 
     border-radius: 50%;
 
     font-size: 19px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 
 .zoom-indicator {
+
     padding: 9px 15px;
 
     border-radius: 999px;
 
     font-size: 14px;
-    font-weight: 600;
 
-    letter-spacing: 0.2px;
+    font-weight: 600;
 }
 
 
-/* =========================
-   BOTTOM CONTROLS
-   ========================= */
+/* BOTTOM */
 
 .bottom-controls {
+
     position: absolute;
 
     left: 0;
-    bottom: calc(env(safe-area-inset-bottom) + 25px);
+
+    bottom: calc(
+        env(safe-area-inset-bottom) + 25px
+    );
 
     width: 100%;
 
     display: flex;
-    align-items: center;
+
     justify-content: space-between;
+
+    align-items: center;
 
     padding: 0 35px;
 
-    z-index: 10;
+    z-index: 20;
 }
 
 
 .side-button {
+
     width: 52px;
     height: 52px;
 
-    border: 0;
+    border: none;
+
     border-radius: 50%;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
     color: white;
 
-    background: rgba(20, 20, 20, 0.45);
+    background:
+        rgba(20, 20, 20, 0.45);
 
     backdrop-filter: blur(18px);
+
     -webkit-backdrop-filter: blur(18px);
 
     font-size: 23px;
@@ -166,16 +188,10 @@ body {
 }
 
 
-.side-button span {
-    transform: translateY(-1px);
-}
-
-
-/* =========================
-   SHUTTER
-   ========================= */
+/* SHUTTER */
 
 .shutter-button {
+
     width: 82px;
     height: 82px;
 
@@ -183,90 +199,343 @@ body {
 
     border: 5px solid white;
 
-    background: rgba(255, 255, 255, 0.08);
+    background:
+        rgba(255, 255, 255, 0.08);
 
     box-shadow:
         0 4px 25px rgba(0, 0, 0, 0.25);
 
-    cursor: pointer;
-
     transition:
-        transform 0.12s ease,
-        background 0.12s ease;
+        transform 0.12s ease;
 }
 
 
 .shutter-button:active {
+
     transform: scale(0.88);
 
-    background: rgba(255, 255, 255, 0.3);
 }
 
 
-/* =========================
-   DESKTOP
-   ========================= */
+/* STYLES BUTTON */
 
-@media (min-width: 700px) {
+.styles-button {
 
-    .bottom-controls {
-        padding-left: 50px;
-        padding-right: 50px;
-        bottom: 35px;
-    }
+    position: absolute;
 
-    .shutter-button {
-        width: 76px;
-        height: 76px;
-    }
+    right: 28px;
 
-    .top-controls {
-        padding-left: 30px;
-        padding-right: 30px;
-    }
+    bottom: calc(
+        env(safe-area-inset-bottom) + 105px
+    );
+
+    width: 48px;
+    height: 48px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background:
+        rgba(20, 20, 20, 0.55);
+
+    color: white;
+
+    font-size: 22px;
+
+    backdrop-filter: blur(18px);
+
+    -webkit-backdrop-filter: blur(18px);
+
+    z-index: 20;
+
 }
 
 
-/* =========================
-   HIDE CANVAS
-   ========================= */
-
-#photoCanvas {
-    display: none;
-}
-
-
-/* =========================
-   FOCUS INDICATOR
-   ========================= */
+/* FOCUS */
 
 #focusIndicator {
+
     position: absolute;
 
     width: 65px;
     height: 65px;
 
     border: 2px solid white;
+
     border-radius: 10px;
 
     pointer-events: none;
 
     opacity: 0;
+
     transform: scale(1.25);
 
-    z-index: 20;
+    z-index: 30;
 
     transition:
         opacity 0.15s ease,
         transform 0.2s ease;
 }
 
+
 #focusIndicator.active {
+
     opacity: 1;
+
     transform: scale(1);
+
 }
 
-#cameraPreview {
-    touch-action: none;
-    transition: transform 0.15s ease-out;
+
+/* STYLE PANEL */
+
+.style-panel {
+
+    position: absolute;
+
+    left: 12px;
+    right: 12px;
+
+    bottom: calc(
+        env(safe-area-inset-bottom) + 95px
+    );
+
+    padding: 18px;
+
+    border-radius: 24px;
+
+    background:
+        rgba(18, 18, 18, 0.82);
+
+    backdrop-filter: blur(25px);
+
+    -webkit-backdrop-filter: blur(25px);
+
+    color: white;
+
+    z-index: 50;
+
+    transform:
+        translateY(30px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
+
+
+.style-panel.open {
+
+    transform:
+        translateY(0);
+
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+/* STYLE HEADER */
+
+.style-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 15px;
+
+    font-size: 18px;
+
+    font-weight: 600;
+}
+
+
+.style-header button {
+
+    border: none;
+
+    background: none;
+
+    color: #ddd;
+
+    font-size: 15px;
+}
+
+
+/* OPTIONS */
+
+.style-options {
+
+    display: flex;
+
+    gap: 10px;
+
+    overflow-x: auto;
+
+    padding-bottom: 8px;
+}
+
+
+.style-option {
+
+    min-width: 75px;
+
+    border: none;
+
+    background: none;
+
+    color: #aaa;
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+
+.style-option.active {
+
+    color: white;
+}
+
+
+/* STYLE THUMBNAILS */
+
+.style-preview {
+
+    width: 75px;
+    height: 75px;
+
+    border-radius: 12px;
+
+    margin-bottom: 7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #777,
+            #222
+        );
+
+    border: 2px solid transparent;
+}
+
+
+.style-option.active
+.style-preview {
+
+    border-color: white;
+}
+
+
+/* PRESET PREVIEWS */
+
+.style-preview.original {
+    filter: none;
+}
+
+.style-preview.vintage {
+    filter:
+        sepia(0.45)
+        saturate(0.85)
+        contrast(0.95);
+}
+
+.style-preview.film {
+    filter:
+        contrast(1.15)
+        saturate(0.8);
+}
+
+.style-preview.bw {
+    filter:
+        grayscale(1)
+        contrast(1.15);
+}
+
+.style-preview.dreamy {
+    filter:
+        brightness(1.12)
+        saturate(0.85)
+        blur(0.3px);
+}
+
+.style-preview.noir {
+    filter:
+        grayscale(1)
+        contrast(1.5)
+        brightness(0.8);
+}
+
+
+/* STRENGTH */
+
+.strength-control {
+
+    margin-top: 12px;
+
+}
+
+
+.strength-label {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: 13px;
+
+    color: #aaa;
+
+    margin-bottom: 8px;
+}
+
+
+#strengthSlider {
+
+    width: 100%;
+}
+
+
+/* DESKTOP */
+
+@media (min-width: 700px) {
+
+    .bottom-controls {
+
+        padding-left: 50px;
+        padding-right: 50px;
+
+    }
+
+    .style-panel {
+
+        max-width: 500px;
+
+        left: 50%;
+
+        right: auto;
+
+        width: calc(100% - 24px);
+
+        transform:
+            translate(-50%, 30px);
+
+    }
+
+    .style-panel.open {
+
+        transform:
+            translate(-50%, 0);
+
+    }
+
+}
+
