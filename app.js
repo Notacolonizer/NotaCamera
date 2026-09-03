@@ -4,6 +4,8 @@ const canvas = document.getElementById("photoCanvas");
 const shutterButton = document.getElementById("shutterButton");
 const cameraButton = document.getElementById("cameraButton");
 
+const focusIndicator = document.getElementById("focusIndicator");
+
 let currentCamera = "environment";
 let currentStream = null;
 
@@ -100,6 +102,65 @@ async function switchCamera() {
 
 // BUTTONS
 shutterButton.addEventListener("click", takePhoto);
+
+
+// TAP TO FOCUS
+video.addEventListener("click", async (event) => {
+
+    const rect = video.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Position focus indicator
+    focusIndicator.style.left =
+        `${x - 32.5}px`;
+
+    focusIndicator.style.top =
+        `${y - 32.5}px`;
+
+    // Show indicator
+    focusIndicator.classList.remove("active");
+
+    // Force animation restart
+    void focusIndicator.offsetWidth;
+
+    focusIndicator.classList.add("active");
+
+    // Try to use the camera's focus capabilities
+    if (currentStream) {
+
+        const track = currentStream.getVideoTracks()[0];
+
+        if (track) {
+
+            const capabilities = track.getCapabilities();
+
+            if (capabilities.focusMode) {
+
+                try {
+
+                    await track.applyConstraints({
+                        advanced: [
+                            {
+                                focusMode: "single-shot"
+                            }
+                        ]
+                    });
+
+                } catch (error) {
+                    console.log("Focus control unavailable:", error);
+                }
+            }
+        }
+    }
+
+    // Hide after a moment
+    setTimeout(() => {
+        focusIndicator.classList.remove("active");
+    }, 1200);
+});
+
 
 cameraButton.addEventListener("click", switchCamera);
 
