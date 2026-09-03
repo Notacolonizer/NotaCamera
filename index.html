@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,11 +6,12 @@
 
     <meta
         name="viewport"
-        content="width=device-width,
-        initial-scale=1.0,
-        viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
 
-    <title>Not a Camera</title>
+    <meta name="theme-color" content="#000000">
+
+    <title>Not A Camera</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,295 +20,583 @@
 
 <main class="camera">
 
-    <!-- CAMERA -->
+    <!-- CAMERA PREVIEW -->
+
     <video
         id="cameraPreview"
         autoplay
         playsinline
-        muted>
-    </video>
+        muted
+    ></video>
 
-    <!-- FOCUS -->
     <div id="focusIndicator"></div>
 
+    <!-- TOP BAR -->
 
-    <!-- TOP CONTROLS -->
-
-    <div class="top-controls">
+    <div class="top-bar">
 
         <button
             class="glass-button"
-            id="flashButton">
+            id="flashButton"
+            aria-label="Flash"
+        >
             ⚡
         </button>
 
         <button
-            class="zoom-indicator"
-            id="zoomButton">
+            class="glass-button zoom-button"
+            id="zoomButton"
+        >
             1×
         </button>
 
         <button
             class="glass-button"
-            id="cameraButton">
+            id="cameraButton"
+            aria-label="Switch camera"
+        >
             ↻
         </button>
 
     </div>
 
 
-    <!-- STYLE PANEL -->
+    <!-- CAMERA STATUS -->
 
-    <div
-        class="style-panel"
-        id="stylePanel">
-
-        <div class="style-header">
-            <span>Styles</span>
-
-            <button id="closeStyles">
-                Done
-            </button>
-        </div>
-
-
-        <div class="style-options">
-
-            <button
-                class="style-option active"
-                data-style="original">
-
-                <div class="style-preview original"></div>
-
-                <span>Original</span>
-
-            </button>
-
-
-            <button
-                class="style-option"
-                data-style="vintage">
-
-                <div class="style-preview vintage"></div>
-
-                <span>Vintage</span>
-
-            </button>
-
-
-            <button
-                class="style-option"
-                data-style="film">
-
-                <div class="style-preview film"></div>
-
-                <span>Film</span>
-
-            </button>
-
-
-            <button
-                class="style-option"
-                data-style="bw">
-
-                <div class="style-preview bw"></div>
-
-                <span>B&W</span>
-
-            </button>
-
-
-            <button
-                class="style-option"
-                data-style="dreamy">
-
-                <div class="style-preview dreamy"></div>
-
-                <span>Dreamy</span>
-
-            </button>
-
-
-            <button
-                class="style-option"
-                data-style="noir">
-
-                <div class="style-preview noir"></div>
-
-                <span>Noir</span>
-
-            </button>
-
-        </div>
-
-
-        <div class="strength-control">
-
-            <div class="strength-label">
-                <span>Strength</span>
-                <span id="strengthValue">70</span>
-            </div>
-
-            <input
-                id="strengthSlider"
-                type="range"
-                min="0"
-                max="100"
-                value="70">
-
-        </div>
-
+    <div class="camera-status" id="cameraStatus">
+        Ready
     </div>
 
 
-    <!-- GALLERY -->
+    <!-- STYLE NAME -->
 
-<div class="gallery-screen" id="galleryScreen">
-
-    <div class="gallery-header">
-
-        <button id="closeGallery">
-            ←
-        </button>
-
-        <h2>Photos</h2>
-
-        <div></div>
-
-    </div>
-
-    <div
-        class="gallery-grid"
-        id="galleryGrid">
-    </div>
-
-</div>
-
-
-    <!-- PHOTO VIEWER -->
-
-<div class="photo-viewer" id="photoViewer">
-
-    <div class="viewer-top">
-
-        <button id="closeViewer">
-            ←
-        </button>
-
-        <span id="viewerTitle">
-            Photo
-        </span>
-
-        <button id="deletePhoto">
-            🗑
-        </button>
-
+    <div class="current-style" id="currentStyle">
+        ORIGINAL
     </div>
 
 
-    <div class="viewer-image-container">
+    <!-- BOTTOM CAMERA CONTROLS -->
+
+    <div class="camera-controls">
 
         <button
-            class="viewer-arrow left"
-            id="previousPhoto">
-            ‹
-        </button>
-
-        <img
-            id="viewerImage"
-            alt="Selected photo">
-
-        <button
-            class="viewer-arrow right"
-            id="nextPhoto">
-            ›
-        </button>
-
-    </div>
-
-
-    <div class="viewer-bottom">
-
-        <div
-            class="photo-info"
-            id="photoInfo">
-        </div>
-
-
-        <div class="viewer-actions">
-
-            <button id="sharePhoto">
-                ↗
-                <span>Share</span>
-            </button>
-
-            <button id="exportPhoto">
-                ↓
-                <span>Export</span>
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-    
-    <!-- BOTTOM CONTROLS -->
-
-    <div class="bottom-controls">
-
-        <!-- Gallery -->
-        <button
-            class="side-button"
-            id="galleryButton">
-
-            □
-
+            class="gallery-button"
+            id="galleryButton"
+            aria-label="Gallery"
+        >
+            <span></span>
         </button>
 
 
-        <!-- Shutter -->
         <button
             class="shutter-button"
             id="shutterButton"
-            aria-label="Take photo">
+            aria-label="Take photo"
+        >
+            <span></span>
         </button>
 
 
-        <!-- Camera switch -->
         <button
-            class="side-button"
-            id="cameraModeButton">
-
+            class="camera-mode-button"
+            id="cameraModeButton"
+            aria-label="Switch camera"
+        >
             ↻
-
         </button>
 
     </div>
 
 
-    <!-- STYLES BUTTON -->
+    <!-- STYLE BUTTON -->
 
     <button
         class="styles-button"
-        id="stylesButton">
-
-        ✦
-
+        id="stylesButton"
+    >
+        <span>✦</span>
+        <span>LOOK</span>
     </button>
 
 
+    <!-- =================================================
+         CAMERA CUSTOMIZER
+    ================================================= -->
+
+    <section
+        class="style-panel"
+        id="stylePanel"
+    >
+
+        <div class="panel-handle"></div>
+
+        <div class="panel-header">
+
+            <div>
+                <div class="eyebrow">
+                    CAMERA LAB
+                </div>
+
+                <h2>Customize</h2>
+            </div>
+
+            <button
+                class="close-button"
+                id="closeStyles"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- PRESET LOOKS -->
+
+        <div class="section-title">
+            CAMERA LOOKS
+        </div>
+
+        <div class="style-scroll">
+
+            <button
+                class="style-option active"
+                data-style="original"
+            >
+                <div class="style-preview original-preview"></div>
+                <span>Original</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="film"
+            >
+                <div class="style-preview film-preview"></div>
+                <span>35mm</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="vintage"
+            >
+                <div class="style-preview vintage-preview"></div>
+                <span>Vintage</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="disposable"
+            >
+                <div class="style-preview disposable-preview"></div>
+                <span>Disposable</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="digital"
+            >
+                <div class="style-preview digital-preview"></div>
+                <span>Digital</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="dreamy"
+            >
+                <div class="style-preview dreamy-preview"></div>
+                <span>Dream</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="night"
+            >
+                <div class="style-preview night-preview"></div>
+                <span>Night</span>
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="noir"
+            >
+                <div class="style-preview noir-preview"></div>
+                <span>Noir</span>
+            </button>
+
+        </div>
+
+
+        <!-- STRENGTH -->
+
+        <div class="control-row">
+
+            <div>
+                <span class="control-label">
+                    Look strength
+                </span>
+
+                <span
+                    class="control-value"
+                    id="strengthValue"
+                >
+                    70
+                </span>
+            </div>
+
+            <input
+                type="range"
+                id="strengthSlider"
+                min="0"
+                max="100"
+                value="70"
+            >
+
+        </div>
+
+
+        <!-- CUSTOM CAMERA CONTROLS -->
+
+        <div class="section-title custom-title">
+            CUSTOM CAMERA
+        </div>
+
+
+        <div class="custom-grid">
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Exposure</span>
+                    <span id="exposureValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="exposureSlider"
+                    min="-30"
+                    max="30"
+                    value="0"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Contrast</span>
+                    <span id="contrastValue">100</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="contrastSlider"
+                    min="70"
+                    max="140"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Saturation</span>
+                    <span id="saturationValue">100</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="saturationSlider"
+                    min="0"
+                    max="160"
+                    value="100"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Warmth</span>
+                    <span id="warmthValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="warmthSlider"
+                    min="-30"
+                    max="30"
+                    value="0"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Grain</span>
+                    <span id="grainValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="grainSlider"
+                    min="0"
+                    max="60"
+                    value="0"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Vignette</span>
+                    <span id="vignetteValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="vignetteSlider"
+                    min="0"
+                    max="70"
+                    value="0"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Dust</span>
+                    <span id="dustValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="dustSlider"
+                    min="0"
+                    max="40"
+                    value="0"
+                >
+
+            </div>
+
+
+            <div class="custom-control">
+
+                <div class="custom-label">
+                    <span>Light leak</span>
+                    <span id="lightLeakValue">0</span>
+                </div>
+
+                <input
+                    type="range"
+                    id="lightLeakSlider"
+                    min="0"
+                    max="60"
+                    value="0"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- DATE STAMP -->
+
+        <label class="toggle-row">
+
+            <span>
+                Date stamp
+            </span>
+
+            <input
+                type="checkbox"
+                id="dateStampToggle"
+            >
+
+            <span class="toggle-switch"></span>
+
+        </label>
+
+
+        <!-- RESET -->
+
+        <button
+            class="reset-button"
+            id="resetCamera"
+        >
+            Reset camera
+        </button>
+
+    </section>
+
+
+    <!-- =================================================
+         GALLERY
+    ================================================= -->
+
+    <section
+        class="gallery-screen"
+        id="galleryScreen"
+    >
+
+        <div class="gallery-header">
+
+            <button
+                class="gallery-back"
+                id="closeGallery"
+            >
+                ←
+            </button>
+
+            <div>
+                <div class="eyebrow">
+                    YOUR CAMERA
+                </div>
+
+                <h2>Photos</h2>
+            </div>
+
+            <div class="gallery-count" id="galleryCount">
+                0
+            </div>
+
+        </div>
+
+
+        <div
+            class="gallery-grid"
+            id="galleryGrid"
+        ></div>
+
+    </section>
+
+
+    <!-- =================================================
+         PHOTO VIEWER
+    ================================================= -->
+
+    <section
+        class="photo-viewer"
+        id="photoViewer"
+    >
+
+        <div class="viewer-top">
+
+            <button
+                id="closeViewer"
+                class="viewer-button"
+            >
+                ←
+            </button>
+
+            <div class="viewer-title">
+                <span id="viewerTitle">
+                    Photo
+                </span>
+
+                <small id="viewerSubtitle">
+                    Camera
+                </small>
+            </div>
+
+            <button
+                id="deletePhoto"
+                class="viewer-button"
+            >
+                🗑
+            </button>
+
+        </div>
+
+
+        <div
+            class="viewer-image-container"
+            id="viewerImageContainer"
+        >
+
+            <button
+                class="viewer-arrow left"
+                id="previousPhoto"
+            >
+                ‹
+            </button>
+
+
+            <img
+                id="viewerImage"
+                alt="Selected photo"
+            >
+
+
+            <button
+                class="viewer-arrow right"
+                id="nextPhoto"
+            >
+                ›
+            </button>
+
+        </div>
+
+
+        <div class="viewer-bottom">
+
+            <div
+                class="photo-info"
+                id="photoInfo"
+            ></div>
+
+
+            <div class="viewer-actions">
+
+                <button
+                    id="sharePhoto"
+                    class="viewer-action"
+                >
+                    <strong>↗</strong>
+                    <span>Share</span>
+                </button>
+
+
+                <button
+                    id="exportPhoto"
+                    class="viewer-action"
+                >
+                    <strong>↓</strong>
+                    <span>Export</span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CANVAS -->
+
+    <canvas
+        id="photoCanvas"
+    ></canvas>
+
 </main>
-
-
-<canvas id="photoCanvas"></canvas>
 
 
 <script src="app.js"></script>
 
 </body>
 </html>
-
