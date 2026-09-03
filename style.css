@@ -234,3 +234,34 @@ body {
 #photoCanvas {
     display: none;
 }
+
+
+/* =========================
+   FOCUS INDICATOR
+   ========================= */
+
+#focusIndicator {
+    position: absolute;
+
+    width: 65px;
+    height: 65px;
+
+    border: 2px solid white;
+    border-radius: 10px;
+
+    pointer-events: none;
+
+    opacity: 0;
+    transform: scale(1.25);
+
+    z-index: 20;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.2s ease;
+}
+
+#focusIndicator.active {
+    opacity: 1;
+    transform: scale(1);
+}
