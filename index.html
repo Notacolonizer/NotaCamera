@@ -12,36 +12,59 @@
 
 <body>
 
-    <div class="camera">
+    <main class="camera">
 
-        <video id="cameraPreview"
-               autoplay
-               playsinline
-               muted></video>
+        <video
+            id="cameraPreview"
+            autoplay
+            playsinline
+            muted>
+        </video>
 
+        <!-- Top controls -->
         <div class="top-controls">
-            <button id="flashButton">⚡</button>
-            <button id="switchButton">↻</button>
-        </div>
 
-        <div class="bottom-controls">
-
-            <button class="side-button" id="galleryButton">
-                □
+            <button class="glass-button" id="flashButton">
+                ⚡
             </button>
 
-            <button class="shutter-button" id="shutterButton">
+            <button class="zoom-indicator" id="zoomButton">
+                1×
             </button>
 
-            <button class="side-button" id="cameraButton">
+            <button class="glass-button" id="cameraButton">
                 ↻
             </button>
 
         </div>
 
-    </div>
+
+        <!-- Bottom controls -->
+        <div class="bottom-controls">
+
+            <button class="side-button" id="galleryButton">
+                <span>□</span>
+            </button>
+
+
+            <button
+                class="shutter-button"
+                id="shutterButton"
+                aria-label="Take photo">
+            </button>
+
+
+            <button class="side-button" id="cameraModeButton">
+                <span>↻</span>
+            </button>
+
+        </div>
+
+    </main>
+
 
     <canvas id="photoCanvas"></canvas>
+
 
     <script src="app.js"></script>
 
