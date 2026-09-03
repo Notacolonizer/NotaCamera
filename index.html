@@ -1,26 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-        <title>NotaCamera</title>
+    <title>Not a Camera</title>
 
-        <link rel="stylesheet" href="style.css">
-    </head>
+    <link rel="stylesheet" href="style.css">
+</head>
 
-    <body>
-        <main class="camera">
-            <video id="cameraPreview" autoplay playsinline></video>
+<body>
 
-            <div class="top-controls">
-                <button id="flashbutton">⚡</button>
-                <button id="switchbutton">↻</button>
-            </div>
+    <div class="camera">
 
-            <div class="bottom-controls">
-                <button class="gallery-button" id="gallery-button"></button>
-            </div>
-        </main>
-    </body>
+        <video id="cameraPreview"
+               autoplay
+               playsinline
+               muted></video>
+
+        <div class="top-controls">
+            <button id="flashButton">⚡</button>
+            <button id="switchButton">↻</button>
+        </div>
+
+        <div class="bottom-controls">
+
+            <button class="side-button" id="galleryButton">
+                □
+            </button>
+
+            <button class="shutter-button" id="shutterButton">
+            </button>
+
+            <button class="side-button" id="cameraButton">
+                ↻
+            </button>
+
+        </div>
+
+    </div>
+
+    <canvas id="photoCanvas"></canvas>
+
+    <script src="app.js"></script>
+
+</body>
 </html>
