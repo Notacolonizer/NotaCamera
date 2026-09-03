@@ -8,13 +8,16 @@ let currentCamera = "environment";
 let currentStream = null;
 
 
-// Start camera
+// START CAMERA
 async function startCamera() {
 
     try {
 
+        // Stop previous camera
         if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
+            currentStream.getTracks().forEach(track => {
+                track.stop();
+            });
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -28,20 +31,27 @@ async function startCamera() {
 
         video.srcObject = stream;
 
+        await video.play();
+
+        console.log("Camera started!");
+
     } catch (error) {
 
         console.error("Camera error:", error);
 
-        alert("Unable to access the camera.");
-
+        alert(
+            "Camera couldn't start.\n\n" +
+            "Make sure you've allowed camera access."
+        );
     }
 }
 
 
-// Take photo
+// TAKE PHOTO
 function takePhoto() {
 
     if (!currentStream) {
+        alert("Camera isn't ready yet.");
         return;
     }
 
@@ -58,24 +68,24 @@ function takePhoto() {
         canvas.height
     );
 
-    canvas.toBlob(blob => {
+    canvas.toBlob(function(blob) {
 
-        const photoURL = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
 
         const link = document.createElement("a");
 
-        link.href = photoURL;
-        link.download = `photo-${Date.now()}.jpg`;
+        link.href = url;
+        link.download = "photo-" + Date.now() + ".jpg";
 
         link.click();
 
-        URL.revokeObjectURL(photoURL);
+        URL.revokeObjectURL(url);
 
     }, "image/jpeg", 0.95);
 }
 
 
-// Switch cameras
+// SWITCH CAMERA
 async function switchCamera() {
 
     if (currentCamera === "environment") {
@@ -88,11 +98,11 @@ async function switchCamera() {
 }
 
 
-// Button events
+// BUTTONS
 shutterButton.addEventListener("click", takePhoto);
 
 cameraButton.addEventListener("click", switchCamera);
 
 
-// Start everything
+// START
 startCamera();
