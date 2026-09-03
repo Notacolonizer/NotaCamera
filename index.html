@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta
+        name="viewport"
+        content="width=device-width,
+        initial-scale=1.0,
+        viewport-fit=cover">
 
     <title>Not a Camera</title>
 
@@ -12,63 +16,202 @@
 
 <body>
 
-    <main class="camera">
+<main class="camera">
 
-        <video
-            id="cameraPreview"
-            autoplay
-            playsinline
-            muted>
-        </video>
+    <!-- CAMERA -->
+    <video
+        id="cameraPreview"
+        autoplay
+        playsinline
+        muted>
+    </video>
 
-        <div id="focusIndicator"></div>
+    <!-- FOCUS -->
+    <div id="focusIndicator"></div>
 
-        <!-- Top controls -->
-        <div class="top-controls">
 
-            <button class="glass-button" id="flashButton">
-                ⚡
+    <!-- TOP CONTROLS -->
+
+    <div class="top-controls">
+
+        <button
+            class="glass-button"
+            id="flashButton">
+            ⚡
+        </button>
+
+        <button
+            class="zoom-indicator"
+            id="zoomButton">
+            1×
+        </button>
+
+        <button
+            class="glass-button"
+            id="cameraButton">
+            ↻
+        </button>
+
+    </div>
+
+
+    <!-- STYLE PANEL -->
+
+    <div
+        class="style-panel"
+        id="stylePanel">
+
+        <div class="style-header">
+            <span>Styles</span>
+
+            <button id="closeStyles">
+                Done
             </button>
-
-            <button class="zoom-indicator" id="zoomButton">
-                1×
-            </button>
-
-            <button class="glass-button" id="cameraButton">
-                ↻
-            </button>
-
         </div>
 
 
-        <!-- Bottom controls -->
-        <div class="bottom-controls">
+        <div class="style-options">
 
-            <button class="side-button" id="galleryButton">
-                <span>□</span>
+            <button
+                class="style-option active"
+                data-style="original">
+
+                <div class="style-preview original"></div>
+
+                <span>Original</span>
+
             </button>
 
 
             <button
-                class="shutter-button"
-                id="shutterButton"
-                aria-label="Take photo">
+                class="style-option"
+                data-style="vintage">
+
+                <div class="style-preview vintage"></div>
+
+                <span>Vintage</span>
+
             </button>
 
 
-            <button class="side-button" id="cameraModeButton">
-                <span>↻</span>
+            <button
+                class="style-option"
+                data-style="film">
+
+                <div class="style-preview film"></div>
+
+                <span>Film</span>
+
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="bw">
+
+                <div class="style-preview bw"></div>
+
+                <span>B&W</span>
+
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="dreamy">
+
+                <div class="style-preview dreamy"></div>
+
+                <span>Dreamy</span>
+
+            </button>
+
+
+            <button
+                class="style-option"
+                data-style="noir">
+
+                <div class="style-preview noir"></div>
+
+                <span>Noir</span>
+
             </button>
 
         </div>
 
-    </main>
+
+        <div class="strength-control">
+
+            <div class="strength-label">
+                <span>Strength</span>
+                <span id="strengthValue">70</span>
+            </div>
+
+            <input
+                id="strengthSlider"
+                type="range"
+                min="0"
+                max="100"
+                value="70">
+
+        </div>
+
+    </div>
 
 
-    <canvas id="photoCanvas"></canvas>
+    <!-- BOTTOM CONTROLS -->
+
+    <div class="bottom-controls">
+
+        <!-- Gallery -->
+        <button
+            class="side-button"
+            id="galleryButton">
+
+            □
+
+        </button>
 
 
-    <script src="app.js"></script>
+        <!-- Shutter -->
+        <button
+            class="shutter-button"
+            id="shutterButton"
+            aria-label="Take photo">
+        </button>
+
+
+        <!-- Camera switch -->
+        <button
+            class="side-button"
+            id="cameraModeButton">
+
+            ↻
+
+        </button>
+
+    </div>
+
+
+    <!-- STYLES BUTTON -->
+
+    <button
+        class="styles-button"
+        id="stylesButton">
+
+        ✦
+
+    </button>
+
+
+</main>
+
+
+<canvas id="photoCanvas"></canvas>
+
+
+<script src="app.js"></script>
 
 </body>
 </html>
+
