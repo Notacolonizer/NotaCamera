@@ -1,93 +1,81 @@
+/* =================================
+   ELEMENTS
+================================= */
+
 const video = document.getElementById("cameraPreview");
 const canvas = document.getElementById("photoCanvas");
 
-const shutterButton =
-    document.getElementById("shutterButton");
+const shutterButton = document.getElementById("shutterButton");
+const cameraButton = document.getElementById("cameraButton");
+const cameraModeButton = document.getElementById("cameraModeButton");
+const zoomButton = document.getElementById("zoomButton");
+const focusIndicator = document.getElementById("focusIndicator");
 
-const cameraButton =
-    document.getElementById("cameraButton");
+const stylesButton = document.getElementById("stylesButton");
+const stylePanel = document.getElementById("stylePanel");
+const closeStyles = document.getElementById("closeStyles");
+const strengthSlider = document.getElementById("strengthSlider");
+const strengthValue = document.getElementById("strengthValue");
+const styleOptions = document.querySelectorAll(".style-option");
 
-const cameraModeButton =
-    document.getElementById("cameraModeButton");
-
-const zoomButton =
-    document.getElementById("zoomButton");
-
-const focusIndicator =
-    document.getElementById("focusIndicator");
-
-const stylesButton =
-    document.getElementById("stylesButton");
-
-const stylePanel =
-    document.getElementById("stylePanel");
-
-const closeStyles =
-    document.getElementById("closeStyles");
-
-const strengthSlider =
-    document.getElementById("strengthSlider");
-
-const strengthValue =
-    document.getElementById("strengthValue");
-
-const styleOptions =
-    document.querySelectorAll(".style-option");
+const galleryScreen = document.getElementById("galleryScreen");
+const galleryGrid = document.getElementById("galleryGrid");
+const galleryButton = document.getElementById("galleryButton");
+const closeGallery = document.getElementById("closeGallery");
 
 
 /* =================================
-   PHOTO DATABASE
+   APP STATE
+================================= */
+
+let currentStream = null;
+let currentCamera = "environment";
+
+let currentZoom = 1;
+let zoomMin = 1;
+let zoomMax = 5;
+
+let currentStyle = "original";
+let styleStrength = 70;
+
+
+/* =================================
+   DATABASE
 ================================= */
 
 const DB_NAME = "NotACameraDB";
-
 const DB_VERSION = 1;
-
 const STORE_NAME = "photos";
 
 let photoDatabase = null;
 
 
-
-/* =================================
-   OPEN DATABASE
-================================= */
-
 function openPhotoDatabase() {
 
     return new Promise((resolve, reject) => {
 
-        const request =
-            indexedDB.open(
-                DB_NAME,
-                DB_VERSION
-            );
-
+        const request = indexedDB.open(
+            DB_NAME,
+            DB_VERSION
+        );
 
         request.onupgradeneeded = event => {
 
             const database =
                 event.target.result;
 
-
             if (
-                !database.objectStoreNames
-                    .contains(STORE_NAME)
+                !database.objectStoreNames.contains(
+                    STORE_NAME
+                )
             ) {
 
-                const store =
-                    database.createObjectStore(
-                        STORE_NAME,
-                        {
-                            keyPath: "id",
-                            autoIncrement: true
-                        }
-                    );
-
-
-                store.createIndex(
-                    "createdAt",
-                    "createdAt"
+                database.createObjectStore(
+                    STORE_NAME,
+                    {
+                        keyPath: "id",
+                        autoIncrement: true
+                    }
                 );
 
             }
@@ -100,16 +88,18 @@ function openPhotoDatabase() {
             photoDatabase =
                 event.target.result;
 
-            resolve(photoDatabase);
+            console.log(
+                "Photo database ready"
+            );
+
+            resolve();
 
         };
 
 
         request.onerror = () => {
 
-            reject(
-                request.error
-            );
+            reject(request.error);
 
         };
 
@@ -118,43 +108,23 @@ function openPhotoDatabase() {
 }
 
 
-
-/* =================================
-   SAVE PHOTO
-================================= */
-
 function savePhotoToLibrary(blob) {
 
-    return new Promise(
-        (resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
-            if (!photoDatabase) {
+        const transaction =
+            photoDatabase.transaction(
+                STORE_NAME,
+                "readwrite"
+            );
 
-                reject(
-                    new Error(
-                        "Photo database isn't ready."
-                    )
-                );
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
 
-                return;
-
-            }
-
-
-            const transaction =
-                photoDatabase.transaction(
-                    [STORE_NAME],
-                    "readwrite"
-                );
-
-
-            const store =
-                transaction.objectStore(
-                    STORE_NAME
-                );
-
-
-            const photo = {
+        const request =
+            store.add({
 
                 image: blob,
 
@@ -167,1109 +137,68 @@ function savePhotoToLibrary(blob) {
                 strength:
                     styleStrength
 
-            };
+            });
 
 
-            const request =
-                store.add(photo);
+        request.onsuccess =
+            () => resolve();
 
 
-            request.onsuccess = () => {
+        request.onerror =
+            () => reject(
+                request.error
+            );
 
-                resolve(
-                    request.result
-                );
-
-            };
-
-
-            request.onerror = () => {
-
-                reject(
-                    request.error
-                );
-
-            };
-
-        }
-    );
+    });
 
 }
 
-
-
-
-/* =================================
-   GET ALL PHOTOS
-================================= */
 
 function getAllPhotos() {
 
-    return new Promise(
-        (resolve, reject) => {
-
-            if (!photoDatabase) {
-
-                reject(
-                    new Error(
-                        "Photo database isn't ready."
-                    )
-                );
-
-                return;
-
-            }
-
-
-            const transaction =
-                photoDatabase.transaction(
-                    [STORE_NAME],
-                    "readonly"
-                );
-
-
-            const store =
-                transaction.objectStore(
-                    STORE_NAME
-                );
-
-
-            const request =
-                store.getAll();
-
-
-            request.onsuccess = () => {
-
-                const photos =
-                    request.result.sort(
-                        (a, b) =>
-                            b.createdAt -
-                            a.createdAt
-                    );
-
-
-                resolve(photos);
-
-            };
-
-
-            request.onerror = () => {
-
-                reject(
-                    request.error
-                );
-
-            };
-
-        }
-    );
-
-}
-
-
-
-
-
-/* =================================
-   GALLERY ELEMENTS
-================================= */
-
-const galleryScreen =
-    document.getElementById(
-        "galleryScreen"
-    );
-
-const galleryGrid =
-    document.getElementById(
-        "galleryGrid"
-    );
-
-const galleryButton =
-    document.getElementById(
-        "galleryButton"
-    );
-
-const closeGallery =
-    document.getElementById(
-        "closeGallery"
-    );
-
-
-/* =================================
-   OPEN GALLERY
-================================= */
-
-galleryButton.addEventListener(
-    "click",
-    async () => {
-
-        galleryScreen
-            .classList
-            .add("open");
-
-
-        await loadGallery();
-        
-
-    }
-);
-
-
-/* =================================
-   CLOSE GALLERY
-================================= */
-
-closeGallery.addEventListener(
-    "click",
-    () => {
-
-        galleryScreen
-            .classList
-            .remove("open");
-
-    }
-);
-
-
-
-/* =================================
-   LOAD GALLERY
-================================= */
-
-async function loadGallery() {
-
-    galleryGrid.innerHTML = "";
-
-
-    try {
-
-        const photos =
-            await getAllPhotos();
-
-        galleryPhotos = 
-            photos;
-
-
-        if (photos.length === 0) {
-
-            galleryGrid.innerHTML = `
-
-                <div class="gallery-empty">
-
-                    <div class="gallery-empty-icon">
-                        📷
-                    </div>
-
-                    <h3>No photos yet</h3>
-
-                    <p>
-                        Photos you take with
-                        your camera will appear here.
-                    </p>
-
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        photos.forEach(photo => {
-
-            const image =
-                document.createElement("img");
-
-
-            image.className =
-                "gallery-photo";
-
-
-            image.src =
-                URL.createObjectURL(
-                    photo.image
-                );
-
-
-            image.alt =
-                "Photo"; 
-
-            image.addEventListener(
-    "click",
-    () => {
-
-        const index =
-            galleryPhotos.findIndex(
-                item =>
-                    item.id === photo.id
+    return new Promise((resolve, reject) => {
+
+        const transaction =
+            photoDatabase.transaction(
+                STORE_NAME,
+                "readonly"
             );
 
-
-        openPhotoViewer(index);
-
-    }
-);
-
-
-
-            galleryGrid.appendChild(
-                image
+        const store =
+            transaction.objectStore(
+                STORE_NAME
             );
 
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Couldn't load gallery:",
-            error
-        );
-
-    }
-
-}
-
-/* =================================
-   OPEN PHOTO VIEWER
-================================= */
-
-function openPhotoViewer(index) {
-
-    if (
-        galleryPhotos.length === 0
-    ) {
-        return;
-    }
+        const request =
+            store.getAll();
 
 
-    currentPhotoIndex =
-        index;
+        request.onsuccess = () => {
+
+            const photos =
+                request.result.sort(
+                    (a, b) =>
+                        b.createdAt -
+                        a.createdAt
+                );
+
+            resolve(photos);
+
+        };
 
 
-    updatePhotoViewer();
+        request.onerror =
+            () => reject(
+                request.error
+            );
 
-
-    photoViewer
-        .classList
-        .add("open");
-
-}
-
-/* =================================
-   UPDATE VIEWER
-================================= */
-
-function updatePhotoViewer() {
-
-    const photo =
-        galleryPhotos[
-            currentPhotoIndex
-        ];
-
-
-    if (!photo)
-        return;
-
-
-    /*
-       Clean up previous object URL
-    */
-
-    if (currentPhotoUrl) {
-
-        URL.revokeObjectURL(
-            currentPhotoUrl
-        );
-
-    }
-
-
-    currentPhotoUrl =
-        URL.createObjectURL(
-            photo.image
-        );
-
-
-    viewerImage.src =
-        currentPhotoUrl;
-
-
-    viewerTitle.textContent =
-        `Photo ${currentPhotoIndex + 1}`;
-
-
-    const date =
-        new Date(
-            photo.createdAt
-        );
-
-
-    const dateText =
-        date.toLocaleDateString(
-            undefined,
-            {
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            }
-        );
-
-
-    const timeText =
-        date.toLocaleTimeString(
-            undefined,
-            {
-                hour: "numeric",
-                minute: "2-digit"
-            }
-        );
-
-
-    photoInfo.textContent =
-        `${dateText} · ${timeText} · ` +
-        `${photo.style}`;
-
-
-    /*
-       Navigation
-    */
-
-    if (
-        galleryPhotos.length <= 1
-    ) {
-
-        previousPhoto
-            .classList
-            .add("hidden");
-
-        nextPhoto
-            .classList
-            .add("hidden");
-
-    }
-
-    else {
-
-        previousPhoto
-            .classList
-            .remove("hidden");
-
-        nextPhoto
-            .classList
-            .remove("hidden");
-
-    }
+    });
 
 }
 
 
 /* =================================
-   PREVIOUS PHOTO
-================================= */
-
-previousPhoto.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-
-        if (
-            currentPhotoIndex > 0
-        ) {
-
-            currentPhotoIndex--;
-
-        }
-
-        else {
-
-            currentPhotoIndex =
-                galleryPhotos.length - 1;
-
-        }
-
-
-        updatePhotoViewer();
-
-    }
-);
-
-
-/* =================================
-   NEXT PHOTO
-================================= */
-
-nextPhoto.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-
-        if (
-            currentPhotoIndex <
-            galleryPhotos.length - 1
-        ) {
-
-            currentPhotoIndex++;
-
-        }
-
-        else {
-
-            currentPhotoIndex = 0;
-
-        }
-
-
-        updatePhotoViewer();
-
-    }
-);
-
-
-/* =================================
-   CLOSE VIEWER
-================================= */
-
-closeViewer.addEventListener(
-    "click",
-    () => {
-
-        photoViewer
-            .classList
-            .remove("open");
-
-
-        if (currentPhotoUrl) {
-
-            URL.revokeObjectURL(
-                currentPhotoUrl
-            );
-
-            currentPhotoUrl =
-                null;
-
-        }
-
-    }
-);
-
-/* =================================
-   DELETE PHOTO
-================================= */
-
-function deletePhotoFromLibrary(id) {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const transaction =
-                photoDatabase.transaction(
-                    [STORE_NAME],
-                    "readwrite"
-                );
-
-
-            const store =
-                transaction.objectStore(
-                    STORE_NAME
-                );
-
-
-            const request =
-                store.delete(id);
-
-
-            request.onsuccess =
-                () => resolve();
-
-
-            request.onerror =
-                () => reject(
-                    request.error
-                );
-
-        }
-    );
-
-}
-
-
-deletePhotoButton.addEventListener(
-    "click",
-    async () => {
-
-        const photo =
-            galleryPhotos[
-                currentPhotoIndex
-            ];
-
-
-        if (!photo)
-            return;
-
-
-        const confirmed =
-            confirm(
-                "Delete this photo?"
-            );
-
-
-        if (!confirmed)
-            return;
-
-
-        try {
-
-            await deletePhotoFromLibrary(
-                photo.id
-            );
-
-
-            galleryPhotos.splice(
-                currentPhotoIndex,
-                1
-            );
-
-
-            if (
-                galleryPhotos.length === 0
-            ) {
-
-                photoViewer
-                    .classList
-                    .remove("open");
-
-
-                await loadGallery();
-
-                return;
-
-            }
-
-
-            if (
-                currentPhotoIndex >=
-                galleryPhotos.length
-            ) {
-
-                currentPhotoIndex =
-                    galleryPhotos.length - 1;
-
-            }
-
-
-            updatePhotoViewer();
-
-            await loadGallery();
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Couldn't delete photo:",
-                error
-            );
-
-        }
-
-    }
-);
-
-
-/* =================================
-   SHARE PHOTO
-================================= */
-
-sharePhotoButton.addEventListener(
-    "click",
-    async () => {
-
-        const photo =
-            galleryPhotos[
-                currentPhotoIndex
-            ];
-
-
-        if (!photo)
-            return;
-
-
-        const file =
-            new File(
-                [photo.image],
-                `photo-${photo.id}.jpg`,
-                {
-                    type:
-                        "image/jpeg"
-                }
-            );
-
-
-        if (
-            navigator.share &&
-            navigator.canShare &&
-            navigator.canShare({
-                files: [file]
-            })
-        ) {
-
-            try {
-
-                await navigator.share({
-
-                    files: [file],
-
-                    title:
-                        "Photo"
-
-                });
-
-            }
-
-            catch (error) {
-
-                /*
-                   User cancelled share.
-                */
-
-                console.log(
-                    "Share cancelled."
-                );
-
-            }
-
-        }
-
-        else {
-
-            alert(
-                "Sharing isn't supported " +
-                "by this browser."
-            );
-
-        }
-
-    }
-);
-
-
-/* =================================
-   EXPORT PHOTO
-================================= */
-
-exportPhotoButton.addEventListener(
-    "click",
-    async () => {
-
-        const photo =
-            galleryPhotos[
-                currentPhotoIndex
-            ];
-
-
-        if (!photo)
-            return;
-
-
-        const file =
-            new File(
-                [photo.image],
-                `not-a-camera-${photo.id}.jpg`,
-                {
-                    type:
-                        "image/jpeg"
-                }
-            );
-
-
-        /*
-           iPhone / modern browsers
-        */
-
-        if (
-            navigator.share &&
-            navigator.canShare &&
-            navigator.canShare({
-                files: [file]
-            })
-        ) {
-
-            try {
-
-                await navigator.share({
-
-                    files: [file],
-
-                    title:
-                        "Export Photo"
-
-                });
-
-                return;
-
-            }
-
-            catch (error) {
-
-                console.log(
-                    "Export cancelled."
-                );
-
-                return;
-
-            }
-
-        }
-
-
-        /*
-           Desktop fallback
-        */
-
-        const url =
-            URL.createObjectURL(
-                photo.image
-            );
-
-
-        const link =
-            document.createElement("a");
-
-
-        link.href = url;
-
-        link.download =
-            `not-a-camera-${photo.id}.jpg`;
-
-
-        link.click();
-
-
-        setTimeout(
-            () => {
-
-                URL.revokeObjectURL(
-                    url
-                );
-
-            },
-            1000
-        );
-
-    }
-);
-
-
-/* =================================
-   PHOTO VIEWER ELEMENTS
-================================= */
-
-const photoViewer =
-    document.getElementById(
-        "photoViewer"
-    );
-
-const viewerImage =
-    document.getElementById(
-        "viewerImage"
-    );
-
-const viewerTitle =
-    document.getElementById(
-        "viewerTitle"
-    );
-
-const photoInfo =
-    document.getElementById(
-        "photoInfo"
-    );
-
-const closeViewer =
-    document.getElementById(
-        "closeViewer"
-    );
-
-const deletePhotoButton =
-    document.getElementById(
-        "deletePhoto"
-    );
-
-const sharePhotoButton =
-    document.getElementById(
-        "sharePhoto"
-    );
-
-const exportPhotoButton =
-    document.getElementById(
-        "exportPhoto"
-    );
-
-const previousPhoto =
-    document.getElementById(
-        "previousPhoto"
-    );
-
-const nextPhoto =
-    document.getElementById(
-        "nextPhoto"
-    );
-
-
-let galleryPhotos = [];
-
-let currentPhotoIndex = 0;
-
-let currentPhotoUrl = null;
-
-
-
-
-let currentStream = null;
-
-let currentCamera = "environment";
-
-let currentZoom = 1;
-
-let zoomMin = 1;
-
-let zoomMax = 5;
-
-let currentStyle = "original";
-
-let styleStrength = 70;
-
-let pinchStartDistance = null;
-
-let pinchStartZoom = 1;
-
-
-/* =================================
-   CAMERA STYLES
-================================= */
-
-const styles = {
-
-    original: {
-
-        filter: "none",
-
-        grain: 0,
-
-        vignette: 0,
-
-        dust: 0,
-
-        scratches: 0,
-
-        lightLeak: 0,
-
-        halation: 0,
-
-        glow: 0,
-
-        date: false
-
-    },
-
-
-    vintage: {
-
-        filter: `
-            sepia(0.45)
-            saturate(0.85)
-            contrast(0.94)
-        `,
-
-        grain: 18,
-
-        vignette: 0.35,
-
-        dust: 0.08,
-
-        scratches: 0.02,
-
-        lightLeak: 0.12,
-
-        halation: 0.08,
-
-        glow: 0,
-
-        date: false
-
-    },
-
-
-    film: {
-
-        filter: `
-            contrast(1.12)
-            saturate(0.82)
-        `,
-
-        grain: 28,
-
-        vignette: 0.28,
-
-        dust: 0.10,
-
-        scratches: 0.04,
-
-        lightLeak: 0.05,
-
-        halation: 0.12,
-
-        glow: 0,
-
-        date: false
-
-    },
-
-
-    disposable: {
-
-        filter: `
-            contrast(1.18)
-            saturate(1.08)
-            brightness(1.05)
-        `,
-
-        grain: 38,
-
-        vignette: 0.48,
-
-        dust: 0.16,
-
-        scratches: 0.08,
-
-        lightLeak: 0.18,
-
-        halation: 0.16,
-
-        glow: 0.04,
-
-        date: true
-
-    },
-
-
-    digital: {
-
-        filter: `
-            contrast(1.15)
-            saturate(0.9)
-            brightness(1.02)
-        `,
-
-        grain: 12,
-
-        vignette: 0.12,
-
-        dust: 0,
-
-        scratches: 0,
-
-        lightLeak: 0,
-
-        halation: 0,
-
-        glow: 0,
-
-        date: true
-
-    },
-
-
-    dreamy: {
-
-        filter: `
-            brightness(1.08)
-            saturate(0.88)
-        `,
-
-        grain: 5,
-
-        vignette: 0.12,
-
-        dust: 0,
-
-        scratches: 0,
-
-        lightLeak: 0.32,
-
-        halation: 0.35,
-
-        glow: 0.35,
-
-        date: false
-
-    },
-
-
-    night: {
-
-        filter: `
-            contrast(1.18)
-            brightness(0.88)
-            saturate(0.85)
-        `,
-
-        grain: 24,
-
-        vignette: 0.38,
-
-        dust: 0.04,
-
-        scratches: 0,
-
-        lightLeak: 0,
-
-        halation: 0.18,
-
-        glow: 0.08,
-
-        date: false
-
-    },
-
-
-    noir: {
-
-        filter: `
-            grayscale(1)
-            contrast(1.45)
-            brightness(0.88)
-        `,
-
-        grain: 25,
-
-        vignette: 0.45,
-
-        dust: 0.08,
-
-        scratches: 0.03,
-
-        lightLeak: 0,
-
-        halation: 0,
-
-        glow: 0,
-
-        date: false
-
-    }
-
-};
-
-
-/* =================================
-   CAMERA START
+   CAMERA
 ================================= */
 
 async function startCamera() {
@@ -1280,33 +209,33 @@ async function startCamera() {
 
             currentStream
                 .getTracks()
-                .forEach(track => track.stop());
+                .forEach(track =>
+                    track.stop()
+                );
 
         }
 
 
-        currentStream =
+        const stream =
             await navigator.mediaDevices
-            .getUserMedia({
+                .getUserMedia({
 
-                video: {
+                    video: {
+                        facingMode:
+                            currentCamera
+                    },
 
-                    facingMode:
-                        currentCamera
+                    audio: false
 
-                },
+                });
 
-                audio: false
 
-            });
-
+        currentStream = stream;
 
         video.srcObject =
             currentStream;
 
-
         await video.play();
-
 
         setupZoom();
 
@@ -1316,10 +245,13 @@ async function startCamera() {
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Camera error:",
+            error
+        );
 
         alert(
-            "Couldn't access the camera."
+            "Couldn't access camera."
         );
 
     }
@@ -1338,19 +270,17 @@ async function switchCamera() {
             ? "user"
             : "environment";
 
-
     await startCamera();
 
 }
 
 
-cameraButton.addEventListener(
+cameraButton?.addEventListener(
     "click",
     switchCamera
 );
 
-
-cameraModeButton.addEventListener(
+cameraModeButton?.addEventListener(
     "click",
     switchCamera
 );
@@ -1364,9 +294,10 @@ function setupZoom() {
 
     const track =
         currentStream
-        ?.getVideoTracks()[0];
+            ?.getVideoTracks()[0];
 
-    if (!track) return;
+    if (!track)
+        return;
 
 
     const capabilities =
@@ -1386,7 +317,6 @@ function setupZoom() {
     else {
 
         zoomMin = 1;
-
         zoomMax = 5;
 
     }
@@ -1404,13 +334,16 @@ async function applyZoom(value) {
     currentZoom =
         Math.max(
             zoomMin,
-            Math.min(value, zoomMax)
+            Math.min(
+                value,
+                zoomMax
+            )
         );
 
 
     const track =
         currentStream
-        ?.getVideoTracks()[0];
+            ?.getVideoTracks()[0];
 
 
     if (
@@ -1424,12 +357,12 @@ async function applyZoom(value) {
 
                 advanced: [
                     {
-                        zoom: currentZoom
+                        zoom:
+                            currentZoom
                     }
                 ]
 
             });
-
 
             video.style.transform =
                 "scale(1)";
@@ -1451,8 +384,12 @@ async function applyZoom(value) {
     }
 
 
-    zoomButton.textContent =
-        `${currentZoom.toFixed(1)}×`;
+    if (zoomButton) {
+
+        zoomButton.textContent =
+            `${currentZoom.toFixed(1)}×`;
+
+    }
 
 }
 
@@ -1465,118 +402,39 @@ function applyDigitalZoom() {
 }
 
 
-zoomButton.addEventListener(
+zoomButton?.addEventListener(
     "click",
     () => {
 
-        applyZoom(
-            currentZoom >= 2
-                ? 1
-                : 2
-        );
+        const nextZoom =
+            currentZoom < 1.5
+                ? 2
+                : 1;
+
+        applyZoom(nextZoom);
 
     }
 );
 
 
 /* =================================
-   PINCH ZOOM
+   FOCUS INDICATOR
 ================================= */
 
-video.addEventListener(
-    "touchstart",
-    event => {
-
-        if (event.touches.length !== 2)
-            return;
-
-
-        const a = event.touches[0];
-        const b = event.touches[1];
-
-
-        pinchStartDistance =
-            Math.hypot(
-                b.clientX - a.clientX,
-                b.clientY - a.clientY
-            );
-
-
-        pinchStartZoom =
-            currentZoom;
-
-    }
-);
-
-
-video.addEventListener(
-    "touchmove",
-    event => {
-
-        if (
-            event.touches.length !== 2 ||
-            !pinchStartDistance
-        )
-            return;
-
-
-        event.preventDefault();
-
-
-        const a = event.touches[0];
-        const b = event.touches[1];
-
-
-        const distance =
-            Math.hypot(
-                b.clientX - a.clientX,
-                b.clientY - a.clientY
-            );
-
-
-        const scale =
-            distance /
-            pinchStartDistance;
-
-
-        applyZoom(
-            pinchStartZoom * scale
-        );
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-video.addEventListener(
-    "touchend",
-    () => {
-
-        pinchStartDistance =
-            null;
-
-    }
-);
-
-
-/* =================================
-   TAP TO FOCUS
-================================= */
-
-video.addEventListener(
+video?.addEventListener(
     "click",
     event => {
+
+        if (!focusIndicator)
+            return;
+
 
         const rect =
             video.getBoundingClientRect();
 
-
         const x =
             event.clientX -
             rect.left;
-
 
         const y =
             event.clientY -
@@ -1584,16 +442,15 @@ video.addEventListener(
 
 
         focusIndicator.style.left =
-            `${x - 32.5}px`;
+            `${x - 32}px`;
 
         focusIndicator.style.top =
-            `${y - 32.5}px`;
+            `${y - 32}px`;
 
 
         focusIndicator
             .classList
             .remove("active");
-
 
         void focusIndicator.offsetWidth;
 
@@ -1611,7 +468,7 @@ video.addEventListener(
                     .remove("active");
 
             },
-            1200
+            1000
         );
 
     }
@@ -1622,24 +479,24 @@ video.addEventListener(
    STYLE PANEL
 ================================= */
 
-stylesButton.addEventListener(
+stylesButton?.addEventListener(
     "click",
     () => {
 
         stylePanel
-            .classList
+            ?.classList
             .add("open");
 
     }
 );
 
 
-closeStyles.addEventListener(
+closeStyles?.addEventListener(
     "click",
     () => {
 
         stylePanel
-            .classList
+            ?.classList
             .remove("open");
 
     }
@@ -1647,7 +504,7 @@ closeStyles.addEventListener(
 
 
 /* =================================
-   SELECT STYLE
+   STYLE SELECTION
 ================================= */
 
 styleOptions.forEach(option => {
@@ -1656,16 +513,16 @@ styleOptions.forEach(option => {
         "click",
         () => {
 
-            styleOptions.forEach(item => {
+            styleOptions.forEach(item =>
+                item.classList.remove(
+                    "active"
+                )
+            );
 
-                item.classList
-                    .remove("active");
 
-            });
-
-
-            option.classList
-                .add("active");
+            option.classList.add(
+                "active"
+            );
 
 
             currentStyle =
@@ -1680,11 +537,7 @@ styleOptions.forEach(option => {
 });
 
 
-/* =================================
-   STRENGTH
-================================= */
-
-strengthSlider.addEventListener(
+strengthSlider?.addEventListener(
     "input",
     () => {
 
@@ -1693,9 +546,12 @@ strengthSlider.addEventListener(
                 strengthSlider.value
             );
 
+        if (strengthValue) {
 
-        strengthValue.textContent =
-            styleStrength;
+            strengthValue.textContent =
+                styleStrength;
+
+        }
 
 
         updateLiveStyle();
@@ -1705,44 +561,120 @@ strengthSlider.addEventListener(
 
 
 /* =================================
-   LIVE PREVIEW
+   LIVE STYLES
 ================================= */
 
 function updateLiveStyle() {
 
-    const style =
-        styles[currentStyle];
-
-
-    if (!style) return;
-
-
-    const amount =
-        styleStrength / 100;
-
-
-    if (currentStyle === "original") {
-
-        video.style.filter =
-            "none";
-
+    if (!video)
         return;
+
+
+    switch (currentStyle) {
+
+        case "vintage":
+
+            video.style.filter =
+                "sepia(0.4) saturate(0.85) contrast(0.95)";
+
+            break;
+
+
+        case "film":
+
+            video.style.filter =
+                "contrast(1.15) saturate(0.82)";
+
+            break;
+
+
+        case "bw":
+
+            video.style.filter =
+                "grayscale(1) contrast(1.15)";
+
+            break;
+
+
+        case "dreamy":
+
+            video.style.filter =
+                "brightness(1.1) saturate(0.85)";
+
+            break;
+
+
+        case "noir":
+
+            video.style.filter =
+                "grayscale(1) contrast(1.5) brightness(0.85)";
+
+            break;
+
+
+        default:
+
+            video.style.filter =
+                "none";
 
     }
 
-
-    video.style.filter =
-        style.filter;
+}
 
 
-    /*
-       Add live glow for dreamy styles
-    */
+/* =================================
+   PHOTO FILTER
+================================= */
 
-    if (style.glow > 0) {
+function getCanvasFilter() {
 
-        video.style.filter +=
-            ` blur(${style.glow * amount}px)`;
+    switch (currentStyle) {
+
+        case "vintage":
+
+            return (
+                "sepia(0.4) " +
+                "saturate(0.85) " +
+                "contrast(0.95)"
+            );
+
+
+        case "film":
+
+            return (
+                "contrast(1.15) " +
+                "saturate(0.82)"
+            );
+
+
+        case "bw":
+
+            return (
+                "grayscale(1) " +
+                "contrast(1.15)"
+            );
+
+
+        case "dreamy":
+
+            return (
+                "brightness(1.1) " +
+                "saturate(0.85)"
+            );
+
+
+        case "noir":
+
+            return (
+                "grayscale(1) " +
+                "contrast(1.5) " +
+                "brightness(0.85)"
+            );
+
+
+        default:
+
+            return "none";
 
     }
 
@@ -1755,8 +687,18 @@ function updateLiveStyle() {
 
 function takePhoto() {
 
-    if (!currentStream)
+    if (
+        !currentStream ||
+        !video.videoWidth
+    ) {
+
+        console.log(
+            "Camera not ready yet"
+        );
+
         return;
+
+    }
 
 
     const width =
@@ -1777,389 +719,198 @@ function takePhoto() {
         canvas.getContext("2d");
 
 
-    const zoom =
-        Math.max(
-            1,
-            currentZoom
-        );
-
-
-    const cropWidth =
-        width / zoom;
-
-    const cropHeight =
-        height / zoom;
-
-
-    const cropX =
-        (width - cropWidth) / 2;
-
-    const cropY =
-        (height - cropHeight) / 2;
-
-
-    /*
-       Apply style
-    */
-
     context.filter =
         getCanvasFilter();
 
 
     context.drawImage(
-
         video,
-
-        cropX,
-        cropY,
-
-        cropWidth,
-        cropHeight,
-
         0,
         0,
-
-        width,
-        height
-
-    );
-
-
-    /*
-       Effects
-    */
-
-    applyFilmGrain(
-        context,
         width,
         height
     );
 
 
-    applyVignette(
-        context,
-        width,
-        height
+    canvas.toBlob(
+        async blob => {
+
+            if (!blob)
+                return;
+
+
+            try {
+
+                await savePhotoToLibrary(
+                    blob
+                );
+
+
+                console.log(
+                    "Photo saved!"
+                );
+
+                flashShutter();
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Save error:",
+                    error
+                );
+
+            }
+
+        },
+
+        "image/jpeg",
+        0.95
     );
-
-
-    applyDust(
-        context,
-        width,
-        height
-    );
-
-
-    applyScratches(
-        context,
-        width,
-        height
-    );
-
-
-    applyLightLeak(
-        context,
-        width,
-        height
-    );
-
-
-    if (
-        styles[currentStyle].date
-    ) {
-
-        addDateStamp(
-            context,
-            width,
-            height
-        );
-
-    }
-
-
-    /*
-       Save
-    */
-
-canvas.toBlob(
-    async blob => {
-
-        if (!blob) {
-
-            console.error(
-                "Couldn't create photo."
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            await savePhotoToLibrary(
-                blob
-            );
-
-
-            console.log(
-                "Photo saved to library!"
-            );
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Couldn't save photo:",
-                error
-            );
-
-        }
-
-    },
-
-    "image/jpeg",
-
-    0.95
-);
 
 }
 
 
-shutterButton.addEventListener(
+shutterButton?.addEventListener(
     "click",
     takePhoto
 );
 
 
 /* =================================
-   FILTER
+   SHUTTER FEEDBACK
 ================================= */
 
-function getCanvasFilter() {
+function flashShutter() {
 
-    const style =
-        styles[currentStyle];
-
-
-    if (!style)
-        return "none";
+    if (!shutterButton)
+        return;
 
 
-    return style.filter || "none";
+    shutterButton.style.transform =
+        "scale(0.88)";
+
+
+    setTimeout(
+        () => {
+
+            shutterButton.style.transform =
+                "";
+
+        },
+        120
+    );
 
 }
 
 
 /* =================================
-   GRAIN
+   GALLERY
 ================================= */
 
-function applyFilmGrain(
-    context,
-    width,
-    height
-) {
+galleryButton?.addEventListener(
+    "click",
+    async () => {
 
-    const style =
-        styles[currentStyle];
+        galleryScreen
+            ?.classList
+            .add("open");
+
+        await loadGallery();
+
+    }
+);
 
 
-    const amount =
-        style.grain *
-        (styleStrength / 100);
+closeGallery?.addEventListener(
+    "click",
+    () => {
+
+        galleryScreen
+            ?.classList
+            .remove("open");
+
+    }
+);
 
 
-    if (amount <= 0)
+async function loadGallery() {
+
+    if (!galleryGrid)
         return;
 
 
-    const image =
-        context.getImageData(
-            0,
-            0,
-            width,
-            height
-        );
+    galleryGrid.innerHTML = "";
 
 
-    const data =
-        image.data;
+    try {
+
+        const photos =
+            await getAllPhotos();
 
 
-    for (
-        let i = 0;
-        i < data.length;
-        i += 4
-    ) {
+        if (photos.length === 0) {
 
-        const noise =
-            (Math.random() - 0.5)
-            * amount;
+            galleryGrid.innerHTML = `
+
+                <div class="gallery-empty">
+
+                    <div class="gallery-empty-icon">
+                        📷
+                    </div>
+
+                    <h3>No photos yet</h3>
+
+                    <p>
+                        Take a photo and it will
+                        appear here.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
 
 
-        data[i] =
-            Math.max(
-                0,
-                Math.min(
-                    255,
-                    data[i] + noise
-                )
+        photos.forEach(photo => {
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.className =
+                "gallery-photo";
+
+
+            const url =
+                URL.createObjectURL(
+                    photo.image
+                );
+
+
+            image.src = url;
+
+
+            galleryGrid.appendChild(
+                image
             );
 
-
-        data[i + 1] =
-            Math.max(
-                0,
-                Math.min(
-                    255,
-                    data[i + 1] + noise
-                )
-            );
-
-
-        data[i + 2] =
-            Math.max(
-                0,
-                Math.min(
-                    255,
-                    data[i + 2] + noise
-                )
-            );
+        });
 
     }
 
+    catch (error) {
 
-    context.putImageData(
-        image,
-        0,
-        0
-    );
-
-}
-
-
-/* =================================
-   VIGNETTE
-================================= */
-
-function applyVignette(
-    context,
-    width,
-    height
-) {
-
-    const style =
-        styles[currentStyle];
-
-
-    const amount =
-        style.vignette *
-        (styleStrength / 100);
-
-
-    if (amount <= 0)
-        return;
-
-
-    const gradient =
-        context.createRadialGradient(
-
-            width / 2,
-            height / 2,
-            Math.min(width, height) * 0.25,
-
-            width / 2,
-            height / 2,
-            Math.max(width, height) * 0.75
-
+        console.error(
+            "Gallery error:",
+            error
         );
-
-
-    gradient.addColorStop(
-        0,
-        "rgba(0,0,0,0)"
-    );
-
-
-    gradient.addColorStop(
-        1,
-        `rgba(0,0,0,${amount})`
-    );
-
-
-    context.fillStyle =
-        gradient;
-
-
-    context.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-}
-
-
-/* =================================
-   DUST
-================================= */
-
-function applyDust(
-    context,
-    width,
-    height
-) {
-
-    const style =
-        styles[currentStyle];
-
-
-    const amount =
-        style.dust *
-        (styleStrength / 100);
-
-
-    const count =
-        Math.floor(
-            width * height *
-            amount / 18000
-        );
-
-
-    context.fillStyle =
-        "rgba(255,255,255,0.45)";
-
-
-    for (
-        let i = 0;
-        i < count;
-        i++
-    ) {
-
-        const x =
-            Math.random() * width;
-
-        const y =
-            Math.random() * height;
-
-        const size =
-            Math.random() * 2 + 0.5;
-
-
-        context.beginPath();
-
-        context.arc(
-            x,
-            y,
-            size,
-            0,
-            Math.PI * 2
-        );
-
-        context.fill();
 
     }
 
@@ -2167,173 +918,7 @@ function applyDust(
 
 
 /* =================================
-   SCRATCHES
-================================= */
-
-function applyScratches(
-    context,
-    width,
-    height
-) {
-
-    const style =
-        styles[currentStyle];
-
-
-    const amount =
-        style.scratches *
-        (styleStrength / 100);
-
-
-    const count =
-        Math.floor(
-            amount * 20
-        );
-
-
-    context.strokeStyle =
-        "rgba(255,255,255,0.18)";
-
-
-    context.lineWidth = 1;
-
-
-    for (
-        let i = 0;
-        i < count;
-        i++
-    ) {
-
-        const x =
-            Math.random() * width;
-
-
-        context.beginPath();
-
-        context.moveTo(
-            x,
-            0
-        );
-
-        context.lineTo(
-            x + Math.random() * 10 - 5,
-            height
-        );
-
-        context.stroke();
-
-    }
-
-}
-
-
-/* =================================
-   LIGHT LEAK
-================================= */
-
-function applyLightLeak(
-    context,
-    width,
-    height
-) {
-
-    const style =
-        styles[currentStyle];
-
-
-    const amount =
-        style.lightLeak *
-        (styleStrength / 100);
-
-
-    if (amount <= 0)
-        return;
-
-
-    const gradient =
-        context.createLinearGradient(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-    gradient.addColorStop(
-        0,
-        `rgba(255,120,40,${amount})`
-    );
-
-
-    gradient.addColorStop(
-        0.35,
-        "rgba(255,80,30,0)"
-    );
-
-
-    gradient.addColorStop(
-        1,
-        "rgba(255,80,30,0)"
-    );
-
-
-    context.fillStyle =
-        gradient;
-
-
-    context.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-}
-
-
-/* =================================
-   DATE STAMP
-================================= */
-
-function addDateStamp(
-    context,
-    width,
-    height
-) {
-
-    const now =
-        new Date();
-
-
-    const date =
-        now.toISOString()
-        .slice(0, 10)
-        .replaceAll("-", "-");
-
-
-    context.font =
-        `${Math.max(14, width * 0.025)}px monospace`;
-
-
-    context.fillStyle =
-        "rgba(255,110,50,0.9)";
-
-
-    context.textAlign =
-        "right";
-
-
-    context.fillText(
-        date,
-        width - 25,
-        height - 25
-    );
-
-}
-
-
-/* =================================
-   START
+   INITIALIZE APP
 ================================= */
 
 async function initializeApp() {
@@ -2342,28 +927,21 @@ async function initializeApp() {
 
         await openPhotoDatabase();
 
-        console.log(
-            "Photo library ready!"
-        );
-
-        await startCamera();
-
     }
 
     catch (error) {
 
         console.error(
-            "Couldn't initialize app:",
+            "Database error:",
             error
         );
 
-        await startCamera();
-
     }
+
+
+    await startCamera();
 
 }
 
 
 initializeApp();
-
-
