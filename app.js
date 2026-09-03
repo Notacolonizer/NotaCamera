@@ -309,6 +309,7 @@ galleryButton.addEventListener(
 
 
         await loadGallery();
+        
 
     }
 );
@@ -344,6 +345,9 @@ async function loadGallery() {
 
         const photos =
             await getAllPhotos();
+
+        galleryPhotos = 
+            photos;
 
 
         if (photos.length === 0) {
@@ -389,7 +393,24 @@ async function loadGallery() {
 
 
             image.alt =
-                "Photo";
+                "Photo"; 
+
+            image.addEventListener(
+    "click",
+    () => {
+
+        const index =
+            galleryPhotos.findIndex(
+                item =>
+                    item.id === photo.id
+            );
+
+
+        openPhotoViewer(index);
+
+    }
+);
+
 
 
             galleryGrid.appendChild(
@@ -410,6 +431,602 @@ async function loadGallery() {
     }
 
 }
+
+/* =================================
+   OPEN PHOTO VIEWER
+================================= */
+
+function openPhotoViewer(index) {
+
+    if (
+        galleryPhotos.length === 0
+    ) {
+        return;
+    }
+
+
+    currentPhotoIndex =
+        index;
+
+
+    updatePhotoViewer();
+
+
+    photoViewer
+        .classList
+        .add("open");
+
+}
+
+/* =================================
+   UPDATE VIEWER
+================================= */
+
+function updatePhotoViewer() {
+
+    const photo =
+        galleryPhotos[
+            currentPhotoIndex
+        ];
+
+
+    if (!photo)
+        return;
+
+
+    /*
+       Clean up previous object URL
+    */
+
+    if (currentPhotoUrl) {
+
+        URL.revokeObjectURL(
+            currentPhotoUrl
+        );
+
+    }
+
+
+    currentPhotoUrl =
+        URL.createObjectURL(
+            photo.image
+        );
+
+
+    viewerImage.src =
+        currentPhotoUrl;
+
+
+    viewerTitle.textContent =
+        `Photo ${currentPhotoIndex + 1}`;
+
+
+    const date =
+        new Date(
+            photo.createdAt
+        );
+
+
+    const dateText =
+        date.toLocaleDateString(
+            undefined,
+            {
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+            }
+        );
+
+
+    const timeText =
+        date.toLocaleTimeString(
+            undefined,
+            {
+                hour: "numeric",
+                minute: "2-digit"
+            }
+        );
+
+
+    photoInfo.textContent =
+        `${dateText} · ${timeText} · ` +
+        `${photo.style}`;
+
+
+    /*
+       Navigation
+    */
+
+    if (
+        galleryPhotos.length <= 1
+    ) {
+
+        previousPhoto
+            .classList
+            .add("hidden");
+
+        nextPhoto
+            .classList
+            .add("hidden");
+
+    }
+
+    else {
+
+        previousPhoto
+            .classList
+            .remove("hidden");
+
+        nextPhoto
+            .classList
+            .remove("hidden");
+
+    }
+
+}
+
+
+/* =================================
+   PREVIOUS PHOTO
+================================= */
+
+previousPhoto.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
+
+
+        if (
+            currentPhotoIndex > 0
+        ) {
+
+            currentPhotoIndex--;
+
+        }
+
+        else {
+
+            currentPhotoIndex =
+                galleryPhotos.length - 1;
+
+        }
+
+
+        updatePhotoViewer();
+
+    }
+);
+
+
+/* =================================
+   NEXT PHOTO
+================================= */
+
+nextPhoto.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
+
+
+        if (
+            currentPhotoIndex <
+            galleryPhotos.length - 1
+        ) {
+
+            currentPhotoIndex++;
+
+        }
+
+        else {
+
+            currentPhotoIndex = 0;
+
+        }
+
+
+        updatePhotoViewer();
+
+    }
+);
+
+
+/* =================================
+   CLOSE VIEWER
+================================= */
+
+closeViewer.addEventListener(
+    "click",
+    () => {
+
+        photoViewer
+            .classList
+            .remove("open");
+
+
+        if (currentPhotoUrl) {
+
+            URL.revokeObjectURL(
+                currentPhotoUrl
+            );
+
+            currentPhotoUrl =
+                null;
+
+        }
+
+    }
+);
+
+/* =================================
+   DELETE PHOTO
+================================= */
+
+function deletePhotoFromLibrary(id) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                photoDatabase.transaction(
+                    [STORE_NAME],
+                    "readwrite"
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    STORE_NAME
+                );
+
+
+            const request =
+                store.delete(id);
+
+
+            request.onsuccess =
+                () => resolve();
+
+
+            request.onerror =
+                () => reject(
+                    request.error
+                );
+
+        }
+    );
+
+}
+
+
+deletePhotoButton.addEventListener(
+    "click",
+    async () => {
+
+        const photo =
+            galleryPhotos[
+                currentPhotoIndex
+            ];
+
+
+        if (!photo)
+            return;
+
+
+        const confirmed =
+            confirm(
+                "Delete this photo?"
+            );
+
+
+        if (!confirmed)
+            return;
+
+
+        try {
+
+            await deletePhotoFromLibrary(
+                photo.id
+            );
+
+
+            galleryPhotos.splice(
+                currentPhotoIndex,
+                1
+            );
+
+
+            if (
+                galleryPhotos.length === 0
+            ) {
+
+                photoViewer
+                    .classList
+                    .remove("open");
+
+
+                await loadGallery();
+
+                return;
+
+            }
+
+
+            if (
+                currentPhotoIndex >=
+                galleryPhotos.length
+            ) {
+
+                currentPhotoIndex =
+                    galleryPhotos.length - 1;
+
+            }
+
+
+            updatePhotoViewer();
+
+            await loadGallery();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Couldn't delete photo:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =================================
+   SHARE PHOTO
+================================= */
+
+sharePhotoButton.addEventListener(
+    "click",
+    async () => {
+
+        const photo =
+            galleryPhotos[
+                currentPhotoIndex
+            ];
+
+
+        if (!photo)
+            return;
+
+
+        const file =
+            new File(
+                [photo.image],
+                `photo-${photo.id}.jpg`,
+                {
+                    type:
+                        "image/jpeg"
+                }
+            );
+
+
+        if (
+            navigator.share &&
+            navigator.canShare &&
+            navigator.canShare({
+                files: [file]
+            })
+        ) {
+
+            try {
+
+                await navigator.share({
+
+                    files: [file],
+
+                    title:
+                        "Photo"
+
+                });
+
+            }
+
+            catch (error) {
+
+                /*
+                   User cancelled share.
+                */
+
+                console.log(
+                    "Share cancelled."
+                );
+
+            }
+
+        }
+
+        else {
+
+            alert(
+                "Sharing isn't supported " +
+                "by this browser."
+            );
+
+        }
+
+    }
+);
+
+
+/* =================================
+   EXPORT PHOTO
+================================= */
+
+exportPhotoButton.addEventListener(
+    "click",
+    async () => {
+
+        const photo =
+            galleryPhotos[
+                currentPhotoIndex
+            ];
+
+
+        if (!photo)
+            return;
+
+
+        const file =
+            new File(
+                [photo.image],
+                `not-a-camera-${photo.id}.jpg`,
+                {
+                    type:
+                        "image/jpeg"
+                }
+            );
+
+
+        /*
+           iPhone / modern browsers
+        */
+
+        if (
+            navigator.share &&
+            navigator.canShare &&
+            navigator.canShare({
+                files: [file]
+            })
+        ) {
+
+            try {
+
+                await navigator.share({
+
+                    files: [file],
+
+                    title:
+                        "Export Photo"
+
+                });
+
+                return;
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Export cancelled."
+                );
+
+                return;
+
+            }
+
+        }
+
+
+        /*
+           Desktop fallback
+        */
+
+        const url =
+            URL.createObjectURL(
+                photo.image
+            );
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href = url;
+
+        link.download =
+            `not-a-camera-${photo.id}.jpg`;
+
+
+        link.click();
+
+
+        setTimeout(
+            () => {
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+            },
+            1000
+        );
+
+    }
+);
+
+
+/* =================================
+   PHOTO VIEWER ELEMENTS
+================================= */
+
+const photoViewer =
+    document.getElementById(
+        "photoViewer"
+    );
+
+const viewerImage =
+    document.getElementById(
+        "viewerImage"
+    );
+
+const viewerTitle =
+    document.getElementById(
+        "viewerTitle"
+    );
+
+const photoInfo =
+    document.getElementById(
+        "photoInfo"
+    );
+
+const closeViewer =
+    document.getElementById(
+        "closeViewer"
+    );
+
+const deletePhotoButton =
+    document.getElementById(
+        "deletePhoto"
+    );
+
+const sharePhotoButton =
+    document.getElementById(
+        "sharePhoto"
+    );
+
+const exportPhotoButton =
+    document.getElementById(
+        "exportPhoto"
+    );
+
+const previousPhoto =
+    document.getElementById(
+        "previousPhoto"
+    );
+
+const nextPhoto =
+    document.getElementById(
+        "nextPhoto"
+    );
+
+
+let galleryPhotos = [];
+
+let currentPhotoIndex = 0;
+
+let currentPhotoUrl = null;
 
 
 
