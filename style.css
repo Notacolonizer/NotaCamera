@@ -265,3 +265,8 @@ body {
     opacity: 1;
     transform: scale(1);
 }
+
+#cameraPreview {
+    touch-action: none;
+    transition: transform 0.15s ease-out;
+}
