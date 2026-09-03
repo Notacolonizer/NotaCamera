@@ -35,6 +35,385 @@ const styleOptions =
     document.querySelectorAll(".style-option");
 
 
+/* =================================
+   PHOTO DATABASE
+================================= */
+
+const DB_NAME = "NotACameraDB";
+
+const DB_VERSION = 1;
+
+const STORE_NAME = "photos";
+
+let photoDatabase = null;
+
+
+
+/* =================================
+   OPEN DATABASE
+================================= */
+
+function openPhotoDatabase() {
+
+    return new Promise((resolve, reject) => {
+
+        const request =
+            indexedDB.open(
+                DB_NAME,
+                DB_VERSION
+            );
+
+
+        request.onupgradeneeded = event => {
+
+            const database =
+                event.target.result;
+
+
+            if (
+                !database.objectStoreNames
+                    .contains(STORE_NAME)
+            ) {
+
+                const store =
+                    database.createObjectStore(
+                        STORE_NAME,
+                        {
+                            keyPath: "id",
+                            autoIncrement: true
+                        }
+                    );
+
+
+                store.createIndex(
+                    "createdAt",
+                    "createdAt"
+                );
+
+            }
+
+        };
+
+
+        request.onsuccess = event => {
+
+            photoDatabase =
+                event.target.result;
+
+            resolve(photoDatabase);
+
+        };
+
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+
+        };
+
+    });
+
+}
+
+
+
+/* =================================
+   SAVE PHOTO
+================================= */
+
+function savePhotoToLibrary(blob) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            if (!photoDatabase) {
+
+                reject(
+                    new Error(
+                        "Photo database isn't ready."
+                    )
+                );
+
+                return;
+
+            }
+
+
+            const transaction =
+                photoDatabase.transaction(
+                    [STORE_NAME],
+                    "readwrite"
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    STORE_NAME
+                );
+
+
+            const photo = {
+
+                image: blob,
+
+                createdAt:
+                    Date.now(),
+
+                style:
+                    currentStyle,
+
+                strength:
+                    styleStrength
+
+            };
+
+
+            const request =
+                store.add(photo);
+
+
+            request.onsuccess = () => {
+
+                resolve(
+                    request.result
+                );
+
+            };
+
+
+            request.onerror = () => {
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+
+
+/* =================================
+   GET ALL PHOTOS
+================================= */
+
+function getAllPhotos() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            if (!photoDatabase) {
+
+                reject(
+                    new Error(
+                        "Photo database isn't ready."
+                    )
+                );
+
+                return;
+
+            }
+
+
+            const transaction =
+                photoDatabase.transaction(
+                    [STORE_NAME],
+                    "readonly"
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    STORE_NAME
+                );
+
+
+            const request =
+                store.getAll();
+
+
+            request.onsuccess = () => {
+
+                const photos =
+                    request.result.sort(
+                        (a, b) =>
+                            b.createdAt -
+                            a.createdAt
+                    );
+
+
+                resolve(photos);
+
+            };
+
+
+            request.onerror = () => {
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+
+
+
+/* =================================
+   GALLERY ELEMENTS
+================================= */
+
+const galleryScreen =
+    document.getElementById(
+        "galleryScreen"
+    );
+
+const galleryGrid =
+    document.getElementById(
+        "galleryGrid"
+    );
+
+const galleryButton =
+    document.getElementById(
+        "galleryButton"
+    );
+
+const closeGallery =
+    document.getElementById(
+        "closeGallery"
+    );
+
+
+/* =================================
+   OPEN GALLERY
+================================= */
+
+galleryButton.addEventListener(
+    "click",
+    async () => {
+
+        galleryScreen
+            .classList
+            .add("open");
+
+
+        await loadGallery();
+
+    }
+);
+
+
+/* =================================
+   CLOSE GALLERY
+================================= */
+
+closeGallery.addEventListener(
+    "click",
+    () => {
+
+        galleryScreen
+            .classList
+            .remove("open");
+
+    }
+);
+
+
+
+/* =================================
+   LOAD GALLERY
+================================= */
+
+async function loadGallery() {
+
+    galleryGrid.innerHTML = "";
+
+
+    try {
+
+        const photos =
+            await getAllPhotos();
+
+
+        if (photos.length === 0) {
+
+            galleryGrid.innerHTML = `
+
+                <div class="gallery-empty">
+
+                    <div class="gallery-empty-icon">
+                        📷
+                    </div>
+
+                    <h3>No photos yet</h3>
+
+                    <p>
+                        Photos you take with
+                        your camera will appear here.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        photos.forEach(photo => {
+
+            const image =
+                document.createElement("img");
+
+
+            image.className =
+                "gallery-photo";
+
+
+            image.src =
+                URL.createObjectURL(
+                    photo.image
+                );
+
+
+            image.alt =
+                "Photo";
+
+
+            galleryGrid.appendChild(
+                image
+            );
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Couldn't load gallery:",
+            error
+        );
+
+    }
+
+}
+
+
+
+
 let currentStream = null;
 
 let currentCamera = "environment";
@@ -885,36 +1264,48 @@ function takePhoto() {
        Save
     */
 
-    canvas.toBlob(
-        blob => {
+canvas.toBlob(
+    async blob => {
 
-            const url =
-                URL.createObjectURL(blob);
+        if (!blob) {
 
+            console.error(
+                "Couldn't create photo."
+            );
 
-            const link =
-                document.createElement("a");
+            return;
 
-
-            link.href = url;
-
-
-            link.download =
-                `not-a-camera-${Date.now()}.jpg`;
+        }
 
 
-            link.click();
+        try {
+
+            await savePhotoToLibrary(
+                blob
+            );
 
 
-            URL.revokeObjectURL(url);
+            console.log(
+                "Photo saved to library!"
+            );
 
-        },
+        }
 
-        "image/jpeg",
+        catch (error) {
 
-        0.95
+            console.error(
+                "Couldn't save photo:",
+                error
+            );
 
-    );
+        }
+
+    },
+
+    "image/jpeg",
+
+    0.95
+);
 
 }
 
@@ -1328,5 +1719,34 @@ function addDateStamp(
    START
 ================================= */
 
-startCamera();
+async function initializeApp() {
+
+    try {
+
+        await openPhotoDatabase();
+
+        console.log(
+            "Photo library ready!"
+        );
+
+        await startCamera();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Couldn't initialize app:",
+            error
+        );
+
+        await startCamera();
+
+    }
+
+}
+
+
+initializeApp();
+
 
