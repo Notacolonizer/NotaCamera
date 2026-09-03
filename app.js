@@ -1,42 +1,94 @@
-const video = document.getElementById("cameraPreview");
-const canvas = document.getElementById("photoCanvas");
+const video =
+    document.getElementById("cameraPreview");
 
-const shutterButton = document.getElementById("shutterButton");
-const cameraButton = document.getElementById("cameraButton");
-const zoomButton = document.getElementById("zoomButton");
-const focusIndicator = document.getElementById("focusIndicator");
+const canvas =
+    document.getElementById("photoCanvas");
+
+const shutterButton =
+    document.getElementById("shutterButton");
+
+const cameraButton =
+    document.getElementById("cameraButton");
+
+const cameraModeButton =
+    document.getElementById("cameraModeButton");
+
+const zoomButton =
+    document.getElementById("zoomButton");
+
+const focusIndicator =
+    document.getElementById("focusIndicator");
+
+const stylesButton =
+    document.getElementById("stylesButton");
+
+const stylePanel =
+    document.getElementById("stylePanel");
+
+const closeStyles =
+    document.getElementById("closeStyles");
+
+const strengthSlider =
+    document.getElementById("strengthSlider");
+
+const strengthValue =
+    document.getElementById("strengthValue");
+
+const styleOptions =
+    document.querySelectorAll(".style-option");
+
 
 let currentCamera = "environment";
+
 let currentStream = null;
 
 let currentZoom = 1;
+
 let zoomMin = 1;
-let zoomMax = 1;
+
+let zoomMax = 5;
+
+let currentStyle = "original";
+
+let styleStrength = 70;
 
 let pinchStartDistance = null;
+
 let pinchStartZoom = 1;
 
 
-// =========================
-// START CAMERA
-// =========================
+/* =========================
+   CAMERA
+========================= */
 
 async function startCamera() {
 
     try {
 
         if (currentStream) {
-            currentStream.getTracks().forEach(track => {
-                track.stop();
-            });
+
+            currentStream
+                .getTracks()
+                .forEach(track => track.stop());
+
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: currentCamera
-            },
-            audio: false
-        });
+
+        const stream =
+            await navigator.mediaDevices
+            .getUserMedia({
+
+                video: {
+
+                    facingMode:
+                        currentCamera
+
+                },
+
+                audio: false
+
+            });
+
 
         currentStream = stream;
 
@@ -46,313 +98,565 @@ async function startCamera() {
 
         setupZoom();
 
-        console.log("Camera started!");
+    }
 
-    } catch (error) {
+    catch (error) {
 
-        console.error("Camera error:", error);
+        console.error(error);
 
         alert(
-            "Camera couldn't start.\n\n" +
-            "Make sure you've allowed camera access."
+            "Couldn't access the camera. " +
+            "Please allow camera access."
         );
+
     }
+
 }
 
 
-// =========================
-// SETUP ZOOM
-// =========================
+/* =========================
+   CAMERA SWITCH
+========================= */
+
+async function switchCamera() {
+
+    if (
+        currentCamera ===
+        "environment"
+    ) {
+
+        currentCamera = "user";
+
+    }
+
+    else {
+
+        currentCamera =
+            "environment";
+
+    }
+
+    await startCamera();
+
+}
+
+
+/* Both camera buttons now work */
+
+cameraButton.addEventListener(
+    "click",
+    switchCamera
+);
+
+cameraModeButton.addEventListener(
+    "click",
+    switchCamera
+);
+
+
+/* =========================
+   ZOOM
+========================= */
 
 function setupZoom() {
 
-    const track = currentStream.getVideoTracks()[0];
+    const track =
+        currentStream
+        ?.getVideoTracks()[0];
 
     if (!track) return;
 
-    const capabilities = track.getCapabilities();
+    const capabilities =
+        track.getCapabilities();
+
 
     if (capabilities.zoom) {
 
-        zoomMin = capabilities.zoom.min;
-        zoomMax = capabilities.zoom.max;
+        zoomMin =
+            capabilities.zoom.min;
 
-        currentZoom = Math.max(1, zoomMin);
+        zoomMax =
+            capabilities.zoom.max;
 
-        applyZoom(currentZoom);
+    }
 
-    } else {
-
-        // Browser doesn't expose hardware zoom.
-        // We'll use digital zoom instead.
+    else {
 
         zoomMin = 1;
+
         zoomMax = 5;
 
-        currentZoom = 1;
-
-        applyZoom(currentZoom);
     }
+
+
+    currentZoom = 1;
+
+    applyZoom(1);
+
 }
 
-
-// =========================
-// APPLY ZOOM
-// =========================
 
 async function applyZoom(value) {
 
-    currentZoom = Math.max(
-        zoomMin,
-        Math.min(value, zoomMax)
-    );
+    currentZoom =
+        Math.max(
+            zoomMin,
+            Math.min(
+                value,
+                zoomMax
+            )
+        );
 
-    const track = currentStream?.getVideoTracks()[0];
 
-    if (track) {
+    const track =
+        currentStream
+        ?.getVideoTracks()[0];
 
-        const capabilities = track.getCapabilities();
 
-        if (capabilities.zoom) {
+    if (
+        track &&
+        track.getCapabilities().zoom
+    ) {
 
-            try {
+        try {
 
-                await track.applyConstraints({
-                    advanced: [
-                        {
-                            zoom: currentZoom
-                        }
-                    ]
-                });
+            await track.applyConstraints({
 
-                video.style.transform = "scale(1)";
+                advanced: [
+                    {
+                        zoom:
+                            currentZoom
+                    }
+                ]
 
-            } catch (error) {
+            });
 
-                console.log("Hardware zoom unavailable.");
-                applyDigitalZoom();
+            video.style.transform =
+                "scale(1)";
 
-            }
+        }
 
-        } else {
+        catch {
 
             applyDigitalZoom();
+
         }
+
     }
 
+    else {
+
+        applyDigitalZoom();
+
+    }
+
+
     updateZoomButton();
+
 }
 
-
-// =========================
-// DIGITAL ZOOM
-// =========================
 
 function applyDigitalZoom() {
 
     video.style.transform =
         `scale(${currentZoom})`;
+
 }
 
-
-// =========================
-// UPDATE ZOOM BUTTON
-// =========================
 
 function updateZoomButton() {
 
-    if (currentZoom % 1 === 0) {
+    zoomButton.textContent =
+        `${currentZoom.toFixed(1)}×`;
 
-        zoomButton.textContent =
-            `${currentZoom}×`;
-
-    } else {
-
-        zoomButton.textContent =
-            `${currentZoom.toFixed(1)}×`;
-    }
 }
 
 
-// =========================
-// TAP ZOOM BUTTON
-// =========================
+zoomButton.addEventListener(
+    "click",
+    () => {
 
-zoomButton.addEventListener("click", () => {
+        let nextZoom;
 
-    let nextZoom;
 
-    if (currentZoom < 0.75) {
+        if (currentZoom < 1.5) {
 
-        nextZoom = 1;
+            nextZoom = 2;
 
-    } else if (currentZoom < 1.5) {
+        }
 
-        nextZoom = 2;
+        else {
 
-    } else {
+            nextZoom = 1;
 
-        nextZoom = 0.5;
+        }
+
+
+        applyZoom(nextZoom);
+
     }
+);
 
-    // Don't go below the actual available minimum
-    if (nextZoom < zoomMin) {
-        nextZoom = zoomMin;
+
+/* =========================
+   PINCH ZOOM
+========================= */
+
+video.addEventListener(
+    "touchstart",
+    event => {
+
+        if (
+            event.touches.length === 2
+        ) {
+
+            const a =
+                event.touches[0];
+
+            const b =
+                event.touches[1];
+
+
+            pinchStartDistance =
+                Math.hypot(
+                    b.clientX - a.clientX,
+                    b.clientY - a.clientY
+                );
+
+
+            pinchStartZoom =
+                currentZoom;
+
+        }
+
     }
-
-    applyZoom(nextZoom);
-});
+);
 
 
-// =========================
-// PINCH TO ZOOM
-// =========================
+video.addEventListener(
+    "touchmove",
+    event => {
 
-video.addEventListener("touchstart", event => {
+        if (
+            event.touches.length === 2 &&
+            pinchStartDistance
+        ) {
 
-    if (event.touches.length === 2) {
+            event.preventDefault();
 
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
 
-        pinchStartDistance = Math.hypot(
-            touch2.clientX - touch1.clientX,
-            touch2.clientY - touch1.clientY
+            const a =
+                event.touches[0];
+
+            const b =
+                event.touches[1];
+
+
+            const distance =
+                Math.hypot(
+                    b.clientX - a.clientX,
+                    b.clientY - a.clientY
+                );
+
+
+            const scale =
+                distance /
+                pinchStartDistance;
+
+
+            applyZoom(
+                pinchStartZoom * scale
+            );
+
+        }
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+video.addEventListener(
+    "touchend",
+    () => {
+
+        pinchStartDistance =
+            null;
+
+    }
+);
+
+
+/* =========================
+   FOCUS
+========================= */
+
+video.addEventListener(
+    "click",
+    async event => {
+
+        const rect =
+            video.getBoundingClientRect();
+
+
+        const x =
+            event.clientX -
+            rect.left;
+
+
+        const y =
+            event.clientY -
+            rect.top;
+
+
+        focusIndicator.style.left =
+            `${x - 32.5}px`;
+
+        focusIndicator.style.top =
+            `${y - 32.5}px`;
+
+
+        focusIndicator
+            .classList
+            .remove("active");
+
+
+        void focusIndicator.offsetWidth;
+
+
+        focusIndicator
+            .classList
+            .add("active");
+
+
+        setTimeout(
+            () => {
+
+                focusIndicator
+                    .classList
+                    .remove("active");
+
+            },
+            1200
         );
 
-        pinchStartZoom = currentZoom;
     }
+);
+
+
+/* =========================
+   STYLES PANEL
+========================= */
+
+stylesButton.addEventListener(
+    "click",
+    () => {
+
+        stylePanel
+            .classList
+            .add("open");
+
+    }
+);
+
+
+closeStyles.addEventListener(
+    "click",
+    () => {
+
+        stylePanel
+            .classList
+            .remove("open");
+
+    }
+);
+
+
+/* =========================
+   CHOOSE STYLE
+========================= */
+
+styleOptions.forEach(option => {
+
+    option.addEventListener(
+        "click",
+        () => {
+
+            styleOptions
+                .forEach(item =>
+                    item.classList
+                        .remove("active")
+                );
+
+
+            option.classList
+                .add("active");
+
+
+            currentStyle =
+                option.dataset.style;
+
+
+            updateLiveStyle();
+
+        }
+    );
+
 });
 
 
-video.addEventListener("touchmove", event => {
+/* =========================
+   STRENGTH
+========================= */
+
+strengthSlider.addEventListener(
+    "input",
+    () => {
+
+        styleStrength =
+            Number(
+                strengthSlider.value
+            );
+
+
+        strengthValue.textContent =
+            styleStrength;
+
+
+        updateLiveStyle();
+
+    }
+);
+
+
+/* =========================
+   LIVE FILTER
+========================= */
+
+function updateLiveStyle() {
+
+    const amount =
+        styleStrength / 100;
+
+
+    let filter = "none";
+
 
     if (
-        event.touches.length === 2 &&
-        pinchStartDistance !== null
+        currentStyle ===
+        "vintage"
     ) {
 
-        event.preventDefault();
+        filter =
+            `sepia(${0.55 * amount})
+             saturate(${1 - 0.25 * amount})
+             contrast(${1 - 0.08 * amount})`;
 
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
-
-        const distance = Math.hypot(
-            touch2.clientX - touch1.clientX,
-            touch2.clientY - touch1.clientY
-        );
-
-        const scale =
-            distance / pinchStartDistance;
-
-        const newZoom =
-            pinchStartZoom * scale;
-
-        applyZoom(newZoom);
-    }
-}, {
-    passive: false
-});
-
-
-video.addEventListener("touchend", event => {
-
-    if (event.touches.length < 2) {
-
-        pinchStartDistance = null;
-    }
-});
-
-
-// =========================
-// TAP TO FOCUS
-// =========================
-
-video.addEventListener("click", async event => {
-
-    const rect = video.getBoundingClientRect();
-
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    focusIndicator.style.left =
-        `${x - 32.5}px`;
-
-    focusIndicator.style.top =
-        `${y - 32.5}px`;
-
-    focusIndicator.classList.remove("active");
-
-    void focusIndicator.offsetWidth;
-
-    focusIndicator.classList.add("active");
-
-
-    const track =
-        currentStream?.getVideoTracks()[0];
-
-    if (track) {
-
-        const capabilities =
-            track.getCapabilities();
-
-        if (capabilities.focusMode) {
-
-            try {
-
-                await track.applyConstraints({
-                    advanced: [
-                        {
-                            focusMode: "single-shot"
-                        }
-                    ]
-                });
-
-            } catch (error) {
-
-                console.log(
-                    "Focus control unavailable."
-                );
-            }
-        }
     }
 
 
-    setTimeout(() => {
+    else if (
+        currentStyle ===
+        "film"
+    ) {
 
-        focusIndicator.classList.remove("active");
+        filter =
+            `contrast(${1 + 0.25 * amount})
+             saturate(${1 - 0.20 * amount})`;
 
-    }, 1200);
-});
+    }
 
 
-// =========================
-// TAKE PHOTO
-// =========================
+    else if (
+        currentStyle ===
+        "bw"
+    ) {
+
+        filter =
+            `grayscale(${amount})
+             contrast(${1 + 0.2 * amount})`;
+
+    }
+
+
+    else if (
+        currentStyle ===
+        "dreamy"
+    ) {
+
+        filter =
+            `brightness(${1 + 0.15 * amount})
+             saturate(${1 - 0.15 * amount})
+             blur(${0.5 * amount}px)`;
+
+    }
+
+
+    else if (
+        currentStyle ===
+        "noir"
+    ) {
+
+        filter =
+            `grayscale(${amount})
+             contrast(${1 + 0.5 * amount})
+             brightness(${1 - 0.2 * amount})`;
+
+    }
+
+
+    video.style.filter =
+        filter;
+
+}
+
+
+/* =========================
+   TAKE PHOTO
+========================= */
 
 function takePhoto() {
 
     if (!currentStream) {
 
-        alert("Camera isn't ready yet.");
+        alert(
+            "Camera isn't ready yet."
+        );
 
         return;
+
     }
 
-    const width = video.videoWidth;
-    const height = video.videoHeight;
 
-    canvas.width = width;
-    canvas.height = height;
+    const width =
+        video.videoWidth;
 
-    const context = canvas.getContext("2d");
+    const height =
+        video.videoHeight;
+
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
+
+    const context =
+        canvas.getContext("2d");
+
 
     /*
        Digital zoom crop
     */
 
     const zoom =
-        currentZoom > 1 ? currentZoom : 1;
+        Math.max(
+            1,
+            currentZoom
+        );
+
 
     const cropWidth =
         width / zoom;
@@ -360,11 +664,16 @@ function takePhoto() {
     const cropHeight =
         height / zoom;
 
+
     const cropX =
         (width - cropWidth) / 2;
 
     const cropY =
         (height - cropHeight) / 2;
+
+
+    context.filter =
+        getCanvasFilter();
 
 
     context.drawImage(
@@ -380,63 +689,232 @@ function takePhoto() {
     );
 
 
-    canvas.toBlob(blob => {
+    /*
+       Film grain
+    */
 
-        const url =
-            URL.createObjectURL(blob);
+    if (
+        currentStyle === "film" ||
+        currentStyle === "vintage"
+    ) {
 
-        const link =
-            document.createElement("a");
+        addGrain(
+            context,
+            width,
+            height
+        );
 
-        link.href = url;
-
-        link.download =
-            `photo-${Date.now()}.jpg`;
-
-        link.click();
-
-        URL.revokeObjectURL(url);
-
-    }, "image/jpeg", 0.95);
-}
-
-
-// =========================
-// SWITCH CAMERA
-// =========================
-
-async function switchCamera() {
-
-    if (currentCamera === "environment") {
-
-        currentCamera = "user";
-
-    } else {
-
-        currentCamera = "environment";
     }
 
-    await startCamera();
+
+    canvas.toBlob(
+        blob => {
+
+            const url =
+                URL.createObjectURL(blob);
+
+
+            const link =
+                document.createElement("a");
+
+
+            link.href = url;
+
+
+            link.download =
+                `not-a-camera-${Date.now()}.jpg`;
+
+
+            link.click();
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        },
+
+        "image/jpeg",
+
+        0.95
+    );
+
 }
 
 
-// =========================
-// BUTTONS
-// =========================
+/* =========================
+   PHOTO FILTER
+========================= */
+
+function getCanvasFilter() {
+
+    const amount =
+        styleStrength / 100;
+
+
+    if (
+        currentStyle ===
+        "vintage"
+    ) {
+
+        return `
+            sepia(${0.55 * amount})
+            saturate(${1 - 0.25 * amount})
+            contrast(${1 - 0.08 * amount})
+        `;
+
+    }
+
+
+    if (
+        currentStyle ===
+        "film"
+    ) {
+
+        return `
+            contrast(${1 + 0.25 * amount})
+            saturate(${1 - 0.20 * amount})
+        `;
+
+    }
+
+
+    if (
+        currentStyle ===
+        "bw"
+    ) {
+
+        return `
+            grayscale(${amount})
+            contrast(${1 + 0.2 * amount})
+        `;
+
+    }
+
+
+    if (
+        currentStyle ===
+        "dreamy"
+    ) {
+
+        return `
+            brightness(${1 + 0.15 * amount})
+            saturate(${1 - 0.15 * amount})
+        `;
+
+    }
+
+
+    if (
+        currentStyle ===
+        "noir"
+    ) {
+
+        return `
+            grayscale(${amount})
+            contrast(${1 + 0.5 * amount})
+            brightness(${1 - 0.2 * amount})
+        `;
+
+    }
+
+
+    return "none";
+
+}
+
+
+/* =========================
+   GRAIN
+========================= */
+
+function addGrain(
+    context,
+    width,
+    height
+) {
+
+    const imageData =
+        context.getImageData(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+    const data =
+        imageData.data;
+
+
+    const strength =
+        styleStrength * 0.35;
+
+
+    for (
+        let i = 0;
+        i < data.length;
+        i += 4
+    ) {
+
+        const noise =
+            (Math.random() - 0.5)
+            * strength;
+
+
+        data[i] =
+            Math.max(
+                0,
+                Math.min(
+                    255,
+                    data[i] + noise
+                )
+            );
+
+
+        data[i + 1] =
+            Math.max(
+                0,
+                Math.min(
+                    255,
+                    data[i + 1] + noise
+                )
+            );
+
+
+        data[i + 2] =
+            Math.max(
+                0,
+                Math.min(
+                    255,
+                    data[i + 2] + noise
+                )
+            );
+
+    }
+
+
+    context.putImageData(
+        imageData,
+        0,
+        0
+    );
+
+}
+
+
+/* =========================
+   SHUTTER
+========================= */
 
 shutterButton.addEventListener(
     "click",
     takePhoto
 );
 
-cameraButton.addEventListener(
-    "click",
-    switchCamera
-);
 
-
-// =========================
-// START
-// =========================
+/* =========================
+   START
+========================= */
 
 startCamera();
